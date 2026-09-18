@@ -586,6 +586,7 @@ SPECIFIC USELENIS.TS REQUIREMENTS:
 
 ${fileSpec.path === 'tsconfig.json' ? `
 SPECIFIC TSCONFIG.JSON REQUIREMENTS:
+  - MUST set lib array EXACTLY as: ["dom", "dom.iterable", "esnext"] (do not include "react" or "jsx")
 - Use standard Next.js TypeScript config
 - Include path aliases: "@/*": ["./*"]
 - strict: true, noEmit: true, esModuleInterop: true
