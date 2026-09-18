@@ -897,6 +897,24 @@ export default function ${safeName}() {
       }
     }
 
+
+    // Fix duplicate imports for React hooks and gsap
+    if (validation.data && validation.data.content) {
+      let content = validation.data.content;
+      
+      // If react is imported multiple times with hooks, try to consolidate or remove the extra ones
+      if (content.match(/import.*\buseEffect\b.*from.*react/g)?.length > 1) {
+          // Remove the simpler one
+          content = content.replace(/^import\s+\{\s*useEffect\s*\}\s+from\s+["']react["'];?\s*\n/gm, "");
+      }
+      if (content.match(/import.*\bgsap\b.*from.*gsap/g)?.length > 1) {
+          content = content.replace(/^import\s+gsap\s+from\s+["']gsap["'];?\s*\n/gm, "");
+          content = content.replace(/^import\s+\{\s*gsap\s*\}\s+from\s+["']gsap["'];?\s*\n/gm, "import gsap from 'gsap';\n");
+      }
+      
+      validation.data.content = content;
+    }
+
 // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
