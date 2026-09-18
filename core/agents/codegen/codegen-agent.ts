@@ -929,7 +929,7 @@ export default function ${safeName}() {
         content = content.replace(/import\s*\{\s*Lenis\s*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
         
         let missingImports = '';
-        if (content.includes('useLenis') && !content.includes("import { useLenis } from")) {
+        if (fileSpec.path !== 'hooks/useLenis.ts' && content.includes('useLenis') && !content.includes("import { useLenis } from")) {
             missingImports += "import { useLenis } from '../hooks/useLenis';\n";
         }
         if (content.includes('ScrollTrigger') && !content.includes("import { ScrollTrigger } from")) {
