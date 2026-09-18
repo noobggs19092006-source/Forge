@@ -994,7 +994,7 @@ export default function ${safeName}() {
           const componentName = (fileSpec.path.split('/').pop() || 'Component').replace('.tsx', '').replace('.ts', '');
           content = `import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';${trimmedContent.includes('styles') ? `\nimport styles from './${componentName}.module.css';` : ''}
 
 const ${componentName}: React.FC<{ id?: string }> = ({ id }) => {
   return (
