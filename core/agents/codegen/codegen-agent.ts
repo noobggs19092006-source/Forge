@@ -818,7 +818,38 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       validation.data.content = validation.data.content.replace(/import\s+.*?\s+from\s+['"]styled-jsx.*?['"];?/g, "");
     }
 
-        // Post-processing: generic missing imports auto-fixer for 7B models
+        
+    // Fix layout.tsx raw HTML hallucination
+    if (validation.data && validation.data.content && fileSpec.path === 'app/layout.tsx') {
+      const content = validation.data.content.trim();
+      if (content.startsWith('<html')) {
+        validation.data.content = `import './globals.css';
+import LenisProvider from '../lib/lenis-provider';
+
+export const metadata = {
+  title: 'Portfolio',
+  description: 'Portfolio',
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    ${content.replace(/{children}/g, '<LenisProvider>{children}</LenisProvider>')}
+  );
+}
+`;
+      }
+      
+      // If missing export, append a default export just in case
+      if (!validation.data.content.includes("export default")) {
+         if (validation.data.content.includes("function RootLayout")) {
+             validation.data.content = validation.data.content.replace("function RootLayout", "export default function RootLayout");
+         } else {
+             validation.data.content += "\nexport default function RootLayout({ children }: { children: React.ReactNode }) { return <>{children}</>; }\n";
+         }
+      }
+    }
+
+// Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
       const c = validation.data.content;
