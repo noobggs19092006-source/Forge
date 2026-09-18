@@ -924,6 +924,26 @@ export default function ${safeName}() {
       
       content = content.replace(/crossorigin([^=a-zA-Z0-9])/g, 'crossOrigin="anonymous"$1');
       content = content.replace(/crossOrigin([^=a-zA-Z0-9])/g, 'crossOrigin="anonymous"$1');
+  
+        // Strip hallucinated Lenis import from lenis-provider
+        content = content.replace(/import\s*\{\s*Lenis\s*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
+        
+        let missingImports = '';
+        if (content.includes('useLenis') && !content.includes("import { useLenis } from")) {
+            missingImports += "import { useLenis } from '../hooks/useLenis';\n";
+        }
+        if (content.includes('ScrollTrigger') && !content.includes("import { ScrollTrigger } from")) {
+            missingImports += "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n";
+        }
+        
+        if (missingImports) {
+           if (content.trim().startsWith("'use client'") || content.trim().startsWith('"use client"')) {
+               content = content.replace(/['"]use client['"];?\s*/g, '');
+               content = "'use client';\n" + missingImports + content;
+           } else {
+               content = missingImports + content;
+           }
+        }
 
       if (fileSpec.path === 'app/page.tsx') {
         // Remove hallucinated styles object usage since page.tsx has no CSS module
