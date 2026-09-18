@@ -915,6 +915,38 @@ export default function ${safeName}() {
       validation.data.content = content;
     }
 
+
+    // BULLETPROOF DUPLICATE IMPORTS FIX
+    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
+      let content = validation.data.content;
+      
+      // If we already have a combined React import, kill the isolated useEffect import
+      if (content.includes("useRef") || content.includes("useState") || content.match(/import React/)) {
+          content = content.replace(/import\s+\{\s*useEffect\s*\}\s+from\s+["']react["'];?\r?\n?/g, "");
+      }
+      
+      // If it imports gsap twice, kill the named one
+      if (content.match(/import\s+gsap\s+from/) && content.match(/import\s+\{\s*gsap\s*\}\s+from/)) {
+          content = content.replace(/import\s+\{\s*gsap\s*\}\s+from\s+["']gsap["'];?\r?\n?/g, "");
+      }
+      
+      validation.data.content = content;
+    }
+
+    // BULLETPROOF POSTCSS.CONFIG.JS FIX
+    if (validation.data && validation.data.content && fileSpec.path === 'postcss.config.js') {
+      validation.data.content = `module.exports = {
+  plugins: {
+    'postcss-import': {},
+    'tailwindcss/nesting': {},
+    tailwindcss: {},
+    'postcss-nested': {},
+    autoprefixer: {},
+    'postcss-preset-env': { stage: 3, features: { 'nesting-rules': true } }
+  }
+};`;
+    }
+
 // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
