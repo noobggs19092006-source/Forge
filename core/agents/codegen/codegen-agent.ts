@@ -922,6 +922,12 @@ export default function ${safeName}() {
       // React JSX attribute fixes
       content = content.replace(/<meta charset=/g, '<meta charSet=');
       content = content.replace(/crossorigin/g, 'crossOrigin');
+      if (fileSpec.path === 'app/page.tsx') {
+        // Remove hallucinated styles object usage since page.tsx has no CSS module
+        content = content.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");
+        content = content.replace(/className=\{styles\.([^}]+)\}/g, "className='$1'");
+      }
+
 
       
       // If Qwen generated line continuations inside JSX (backslash at end of line), strip them!
