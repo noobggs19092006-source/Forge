@@ -777,6 +777,19 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
         .join('\n');
     }
 
+
+    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
+      let importsBlock = '';
+      validation.data.content = validation.data.content.replace(/^(?:import\s+.*?;\s*)+/m, (match) => {
+        importsBlock = match;
+        return '';
+      });
+      if (importsBlock) {
+        const uniqueImports = Array.from(new Set(importsBlock.split(/\r?\n/).map(s => s.trim()).filter(Boolean))).join('\n');
+        validation.data.content = uniqueImports + '\n\n' + validation.data.content.trimStart();
+      }
+    }
+
     // Post-processing: fix the persistent small-model failure of outputting
     // `// use client;` or `// 'use client'` (a comment) instead of `'use client';` (directive).
     // This is a safe mechanical substitution — the directive must be line 1.
