@@ -879,7 +879,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             innerContent = content.replace(/<\/?(html|head|body|meta|title|link)[^>]*>/gi, "");
         }
         
-        const componentName = fileSpec.path === 'app/page.tsx' ? 'HomePage' : fileSpec.path.split('/').slice(-2)[0] + 'Page';
+        const componentName = fileSpec.path === 'app/page.tsx' ? 'HomePage' : (fileSpec.path.split('/').slice(-2)[0] || 'Unknown') + 'Page';
         const safeName = componentName.charAt(0).toUpperCase() + componentName.slice(1).replace(/[^a-zA-Z0-9]/g, '');
         
         validation.data.content = `import React from 'react';
