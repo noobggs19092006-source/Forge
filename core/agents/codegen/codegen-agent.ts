@@ -534,7 +534,7 @@ CRITICAL RULES:
 - Export default Hero component at the bottom
 ` : ''}
 
-${fileSpec.path === 'postcss.config.js' ? `
+${fileSpec.path.endsWith('postcss.config.js') ? `
 SPECIFIC POSTCSS.CONFIG.JS REQUIREMENTS:
 - CRITICAL: Next.js 15 requires plugins to be provided as an object string mapping, NOT an array of require() calls!
   - MUST format exactly like this: module.exports = { plugins: { 'postcss-import': {}, 'tailwindcss': {}, 'autoprefixer': {}, 'postcss-nested': {} } };
