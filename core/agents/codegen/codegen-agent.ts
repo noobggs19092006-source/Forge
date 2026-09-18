@@ -960,22 +960,22 @@ export default ${componentName};
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
       const c = validation.data.content;
-      if (c.includes('useEffect(') && !c.includes('useEffect}')) missing.push('import { useEffect } from "react";');
-      if (c.includes('useRef(') && !c.includes('useRef}')) missing.push('import { useRef } from "react";');
-      if (c.includes('useState(') && !c.includes('useState}')) missing.push('import { useState } from "react";');
-      if (c.includes('gsap.') && !c.match(/import\s+gsap/)) missing.push('import gsap from "gsap";');
+      if (c.includes('useEffect(') && !c.match(/import.*\buseEffect\b/)) missing.push('import { useEffect } from "react";');
+      if (c.includes('useRef(') && !c.match(/import.*\buseRef\b/)) missing.push('import { useRef } from "react";');
+      if (c.includes('useState(') && !c.match(/import.*\buseState\b/)) missing.push('import { useState } from "react";');
+      if (c.includes('gsap.') && !c.match(/import.*\bgsap\b/)) missing.push('import gsap from "gsap";');
       
       if (missing.length > 0) {
         // Insert missing imports directly after the first import or use client directive
-        const lines = validation.data!.content!.split('\n');
+        const lines = validation.data.content.split('\n');
         let insertIdx = 0;
         for (let i = 0; i < lines.length; i++) {
-          if (lines[i]?.startsWith('import ')) {
+          if (lines[i] && lines[i].startsWith('import ')) {
             insertIdx = i + 1;
           }
         }
         lines.splice(insertIdx, 0, ...missing);
-        validation.data!.content = lines.join('\n');
+        validation.data.content = lines.join('\n');
       }
     }
     return validation.data;
