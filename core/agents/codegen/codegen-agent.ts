@@ -803,6 +803,19 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
 
 
 
+
+    // Fix use client: move to top if present anywhere
+    if (validation.data && validation.data.content) {
+      if (validation.data.content.match(/["']use client["']/)) {
+        validation.data.content = validation.data.content.replace(/^\s*(?:\/\*|\/\/)?\s*["']?use client["']?[\s;\*\/]*\n?/gm, "");
+        validation.data.content = "'use client';\n" + validation.data.content.trimStart();
+      }
+      
+      // Fix styled-jsx hallucinations
+      validation.data.content = validation.data.content.replace(/<style\s+jsx[\s\S]*?<\/style>/g, "");
+      validation.data.content = validation.data.content.replace(/import\s+.*?\s+from\s+['"]styled-jsx.*?['"];?/g, "");
+    }
+
         // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
