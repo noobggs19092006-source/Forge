@@ -922,8 +922,8 @@ export default function ${safeName}() {
       // React JSX attribute fixes
       content = content.replace(/<meta charset=/g, '<meta charSet=');
       
-      content = content.replace(/crossorigin([^=a-zA-Z0-9])/g, 'crossOrigin="anonymous"$1');
-      content = content.replace(/crossOrigin([^=a-zA-Z0-9])/g, 'crossOrigin="anonymous"$1');
+              content = content.replace(/crossorigin/gi, 'crossOrigin');
+        content = content.replace(/crossOrigin(?![=a-zA-Z0-9])/g, 'crossOrigin="anonymous"');
   
         // Strip hallucinated Lenis import from lenis-provider
         content = content.replace(/import\s*\{\s*Lenis\s*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
