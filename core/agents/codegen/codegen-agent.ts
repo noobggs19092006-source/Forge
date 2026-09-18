@@ -1370,6 +1370,10 @@ export default ${componentName};
                 .join('\n');
             }
             
+            
+            if (fileOutput.path.endsWith('tailwind.config.ts')) {
+              fileOutput.content = fileOutput.content.replace(/:\s*var\((--[^)]+)\)/g, ": 'var($1)'");
+            }
             if (fileOutput.path.endsWith('postcss.config.js')) {
               fileOutput.content = `module.exports = {
   plugins: {
