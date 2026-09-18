@@ -874,7 +874,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         // Try to extract body
         const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
         if (bodyMatch) {
-            innerContent = bodyMatch[1];
+            innerContent = bodyMatch[1] || '';
         } else {
             innerContent = content.replace(/<\/?(html|head|body|meta|title|link)[^>]*>/gi, "");
         }
