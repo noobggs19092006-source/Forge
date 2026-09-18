@@ -50,6 +50,10 @@ export const MotionSectionEntrySchema = z.object({
       .describe('Whether this section should lazy-mount below the fold'),
     estimatedCost: z.enum(['minimal', 'moderate', 'heavy']).default('minimal')
       .describe('Estimated rendering cost'),
+  }).optional().default({
+    gpuIntensive: false,
+    lazyMount: false,
+    estimatedCost: 'minimal'
   }),
 
   /** GSAP/CSS easing override — if omitted, uses design token default */
