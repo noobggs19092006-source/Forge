@@ -797,7 +797,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       validation.data.content = validation.data.content
         // Robust fix for all variations of 'use client' comments, double quotes, missing semicolons, etc.
         // Catches: // 'use client', //"use client", //  use client;, /* use client */, "use client";
-        .replace(/^\s*(?:\/\*|\/\/)?\s*["']?use client["']?[\s;\*\/]*\n/m, "'use client';\n");
+        
     }
 
 
