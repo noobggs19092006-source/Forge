@@ -918,6 +918,10 @@ export default function ${safeName}() {
 
       let content = lines.join('\n');
       
+      
+      // React JSX attribute fixes
+      content = content.replace(/<meta charset=/g, '<meta charSet=');
+      
       // If Qwen generated line continuations inside JSX (backslash at end of line), strip them!
       content = content.replace(/\\\s*\n/g, "\n");
 
