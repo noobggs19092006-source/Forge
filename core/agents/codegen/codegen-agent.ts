@@ -408,6 +408,8 @@ SPECIFIC NEXT.CONFIG.JS REQUIREMENTS:
 
 ${fileSpec.path === 'app/layout.tsx' ? `
 SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
+- CRITICAL: DO NOT OUTPUT RAW HTML. YOU MUST OUTPUT A TYPESCRIPT REACT MODULE. YOU MUST INCLUDE IMPORTS. YOU MUST EXPORT THE ROOTLAYOUT COMPONENT.
+- YOU MUST INCLUDE: import './globals.css';
 - Import global CSS as: import './globals.css' (NOT ../globals.css, NOT ../styles/globals.css - it is in the SAME directory)
 - Import LenisProvider from '../lib/lenis-provider' (relative path from app/ to lib/)
 - MUST NOT use 'use client' directive (this is a Server Component)
