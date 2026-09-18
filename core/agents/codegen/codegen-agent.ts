@@ -924,7 +924,7 @@ export default function ${safeName}() {
       // RAW HTML HALLUCINATION FIX
       const trimmedContent = content.trim();
       if (trimmedContent.startsWith('<') && !trimmedContent.includes('import')) {
-          const componentName = fileSpec.path.split('/').pop().replace('.tsx', '').replace('.ts', '');
+          const componentName = (fileSpec.path.split('/').pop() || 'Component').replace('.tsx', '').replace('.ts', '');
           content = `import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
