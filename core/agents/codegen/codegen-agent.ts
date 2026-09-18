@@ -989,7 +989,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const ${componentName}: React.FC<{ id?: string }> = ({ id }) => {
   return (
-    ${trimmedContent}
+    <>
+      ${trimmedContent}
+    </>
   );
 };
 
