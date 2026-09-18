@@ -898,28 +898,51 @@ export default function ${safeName}() {
     }
 
 
-    // BULLETPROOF DUPLICATE IMPORTS FIX
+    
+
+        // BULLETPROOF DUPLICATE IMPORTS FIX
     if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
-      let content = validation.data.content;
+      let lines = validation.data.content.split('\n');
       
-      // If we already have a combined React import, kill the isolated useEffect import
-      if (content.includes("useRef") || content.includes("useState") || content.match(/import React/)) {
-          content = content.replace(/import\s+\{\s*useEffect\s*\}\s+from\s+["']react["'];?\r?\n?/g, "");
+      // Check for combined React imports
+      const hasCombinedReact = lines.some(l => l.includes('import React') || l.includes('useRef') || l.includes('useState'));
+      if (hasCombinedReact) {
+          lines = lines.filter(l => !l.match(/import\s+\{\s*useEffect\s*\}\s+from\s+["']react["']/));
       }
       
-      // If it imports gsap twice, kill the named one
-      if (content.match(/import\s+gsap\s+from/) && content.match(/import\s+\{\s*gsap\s*\}\s+from/)) {
-          content = content.replace(/import\s+\{\s*gsap\s*\}\s+from\s+["']gsap["'];?\r?\n?/g, "");
+      // Check for duplicate GSAP
+      const hasDefaultGsap = lines.some(l => l.match(/import\s+gsap\s+from\s+["']gsap["']/));
+      if (hasDefaultGsap) {
+          lines = lines.filter(l => !l.match(/import\s+\{\s*gsap\s*\}\s+from\s+["']gsap["']/));
       }
+
+      let content = lines.join('\n');
       
-            
       // If Qwen generated line continuations inside JSX (backslash at end of line), strip them!
       content = content.replace(/\\\s*\n/g, "\n");
+
+      // RAW HTML HALLUCINATION FIX
+      const trimmedContent = content.trim();
+      if (trimmedContent.startsWith('<') && !trimmedContent.includes('import')) {
+          const componentName = fileSpec.path.split('/').pop().replace('.tsx', '').replace('.ts', '');
+          content = `import React, { useEffect, useRef } from 'react';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+const ${componentName}: React.FC<{ id?: string }> = ({ id }) => {
+  return (
+    ${trimmedContent}
+  );
+};
+
+export default ${componentName};
+`;
+      }
 
       validation.data.content = content;
     }
 
-    // BULLETPROOF POSTCSS.CONFIG.JS FIX
+// BULLETPROOF POSTCSS.CONFIG.JS FIX
     if (validation.data && validation.data.content && fileSpec.path === 'postcss.config.js') {
       validation.data.content = `module.exports = {
   plugins: {
