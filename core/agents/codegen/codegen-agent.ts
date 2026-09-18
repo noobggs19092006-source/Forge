@@ -921,7 +921,10 @@ export default function ${safeName}() {
       
       // React JSX attribute fixes
       content = content.replace(/<meta charset=/g, '<meta charSet=');
-      content = content.replace(/crossorigin/g, 'crossOrigin');
+      
+      content = content.replace(/crossorigin([^=a-zA-Z0-9])/g, 'crossOrigin="anonymous"$1');
+      content = content.replace(/crossOrigin([^=a-zA-Z0-9])/g, 'crossOrigin="anonymous"$1');
+
       if (fileSpec.path === 'app/page.tsx') {
         // Remove hallucinated styles object usage since page.tsx has no CSS module
         content = content.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");
