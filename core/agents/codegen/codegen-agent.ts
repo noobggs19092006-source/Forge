@@ -952,12 +952,8 @@ export default ${componentName};
     if (validation.data && validation.data.content && fileSpec.path.endsWith('postcss.config.js')) {
       validation.data.content = `module.exports = {
   plugins: {
-    'postcss-import': {},
-    'tailwindcss/nesting': {},
     tailwindcss: {},
-    'postcss-nested': {},
-    autoprefixer: {},
-    'postcss-preset-env': { stage: 3, features: { 'nesting-rules': true } }
+    autoprefixer: {}
   }
 };`;
     }
