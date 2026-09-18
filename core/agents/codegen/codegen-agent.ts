@@ -926,6 +926,21 @@ export default function ${safeName}() {
         // Remove hallucinated styles object usage since page.tsx has no CSS module
         content = content.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");
         content = content.replace(/className=\{styles\.([^}]+)\}/g, "className='$1'");
+        // Auto-fix missing component imports for page.tsx
+        const componentRegex = /<([A-Z][a-zA-Z0-9]+)/g;
+        let match;
+        const usedComponents = new Set();
+        while ((match = componentRegex.exec(content)) !== null) {
+          usedComponents.add(match[1]);
+        }
+        
+        for (const comp of usedComponents) {
+          if (comp === 'LenisProvider' || comp === 'React') continue;
+          if (!content.includes(`import ${comp} from`)) {
+             content = `import ${comp} from '../components/${comp}';\n` + content;
+          }
+        }
+
       }
 
 
