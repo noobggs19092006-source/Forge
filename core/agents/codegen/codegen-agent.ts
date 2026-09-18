@@ -940,7 +940,15 @@ export default function ${safeName}() {
         for (const comp of usedComponents) {
           if (comp === 'LenisProvider' || comp === 'React') continue;
           if (!content.includes(`import ${comp} from`)) {
-             content = `import ${comp} from '../components/${comp}';\n` + content;
+             
+             // Ensure we don't put imports above 'use client'
+             if (content.trim().startsWith("'use client'") || content.trim().startsWith('"use client"')) {
+                 content = content.replace(/['"]use client['"];?\s*/g, '');
+                 content = "'use client';\n" + `import ${comp} from '../components/${comp}';\n` + content;
+             } else {
+                 content = `import ${comp} from '../components/${comp}';\n` + content;
+             }
+
           }
         }
 
