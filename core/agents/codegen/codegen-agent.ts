@@ -929,7 +929,9 @@ export default function ${safeName}() {
         content = content.replace(/crossOrigin(?![=a-zA-Z0-9])/g, 'crossOrigin="anonymous"');
   
         // Strip hallucinated Lenis import from lenis-provider
-        content = content.replace(/import\s*\{\s*Lenis\s*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
+        // Strip ALL hallucinated named imports of Lenis/useLenis from lenis-provider
+        content = content.replace(/import\s*\{[^}]*(?:Lenis|useLenis)[^}]*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
+        content = content.replace(/,\s*\{[^}]*(?:Lenis|useLenis)[^}]*\}\s*(from\s*['"](?:\.\.\/)+lib\/lenis-provider['"])/g, ' $1');
         
         let missingImports = '';
         if (fileSpec.path !== 'hooks/useLenis.ts' && content.includes('useLenis') && !content.includes("import { useLenis } from")) {
