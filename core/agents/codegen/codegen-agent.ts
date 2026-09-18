@@ -967,7 +967,7 @@ export default ${componentName};
       
       if (missing.length > 0) {
         // Insert missing imports directly after the first import or use client directive
-        const lines = validation.data.content.split('\n');
+        const lines = validation.data.content!.split('\n');
         let insertIdx = 0;
         for (let i = 0; i < lines.length; i++) {
           if (lines[i] && lines[i].startsWith('import ')) {
@@ -975,7 +975,7 @@ export default ${componentName};
           }
         }
         lines.splice(insertIdx, 0, ...missing);
-        validation.data.content = lines.join('\n');
+        validation.data!.content = lines.join('\n');
       }
     }
     return validation.data;
