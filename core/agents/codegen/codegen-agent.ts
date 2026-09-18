@@ -1367,6 +1367,19 @@ export default ${componentName};
                 })
                 .join('\n');
             }
+            
+            if (fileOutput.path.endsWith('postcss.config.js')) {
+              fileOutput.content = `module.exports = {
+  plugins: {
+    'postcss-import': {},
+    'tailwindcss/nesting': {},
+    tailwindcss: {},
+    'postcss-nested': {},
+    autoprefixer: {},
+    'postcss-preset-env': { stage: 3, features: { 'nesting-rules': true } }
+  }
+};`;
+            }
             generatedFiles.set(fileOutput.path, fileOutput.content);
             this.fileCallback?.(fileOutput.path, fileOutput.content);
             for (const [pkg, version] of Object.entries(fileOutput.dependencies)) {
