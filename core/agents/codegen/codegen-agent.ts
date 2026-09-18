@@ -943,7 +943,7 @@ export default ${componentName};
     }
 
 // BULLETPROOF POSTCSS.CONFIG.JS FIX
-    if (validation.data && validation.data.content && fileSpec.path === 'postcss.config.js') {
+    if (validation.data && validation.data.content && fileSpec.path.endsWith('postcss.config.js')) {
       validation.data.content = `module.exports = {
   plugins: {
     'postcss-import': {},
