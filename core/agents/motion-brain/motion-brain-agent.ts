@@ -66,6 +66,9 @@ Your output must be a JSON object with this structure:
 
 CRITICAL RULES:
 
+3. NO NULL VALUES: If you do not need an optional field (like easingOverride or durationOverride), you MUST OMIT the key entirely from the JSON object. Do NOT output "easingOverride": null or "durationOverride": null.
+
+
 1. RESPECT THE MOTION PERSONALITY: The design tokens include a motion personality with default easing and duration. Your choreography must match this personality. Only override easing/duration when a specific section has a strong content reason to differ.
 
 2. JUSTIFY EVERY ANIMATION: Every section entry must have a justification tied to content purpose. "It looks cool" or "for visual interest" are NOT valid justifications. If a section doesn't need animation, set trigger and technique to "none".
