@@ -53,11 +53,11 @@ export const MotionSectionEntrySchema = z.object({
   }),
 
   /** GSAP/CSS easing override — if omitted, uses design token default */
-  easingOverride: z.string().nullable().optional()
+  easingOverride: z.string().optional()
     .describe('Custom easing for this specific animation (overrides motion personality default)'),
 
   /** Duration override in seconds — if omitted, uses design token default */
-  durationOverride: z.number().nullable().optional()
+  durationOverride: z.number().optional()
     .describe('Custom duration for this animation in seconds'),
 });
 

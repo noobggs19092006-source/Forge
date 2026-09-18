@@ -1,32 +1,32 @@
 {
   "stages": {
     "intake": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     },
     "architect": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     },
     "design-brain": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     },
     "motion-brain": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     },
     "codegen": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     },
     "qa-gate": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     },
     "critic": {
-      "tier": "cloud",
-      "model": "gemini-2.5-flash"
+      "tier": "local",
+      "model": "qwen2.5-coder:7b"
     }
   },
   "fallbackOrder": [
@@ -38,7 +38,7 @@
   "rateLimitDelayMs": 1000,
   "ollama": {
     "baseUrl": "http://localhost:11434",
-    "defaultModel": "nemotron-3-ultra:cloud"
+    "defaultModel": "qwen2.5-coder:7b"
   },
   "gemini": {
     "defaultModel": "gemini-2.5-flash"
