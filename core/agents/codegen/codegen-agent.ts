@@ -902,7 +902,10 @@ export default function ${safeName}() {
 
         // BULLETPROOF DUPLICATE IMPORTS FIX
     if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
-      let lines = validation.data.content.split('\n');
+        // Fix TS arithmetic errors on CSS Modules: replace styles.some-kebab-case with styles['some-kebab-case']
+        validation.data.content = validation.data.content.replace(/styles\.([a-zA-Z0-9_]+-[a-zA-Z0-9_-]+)/g, "styles['$1']");
+        
+        let lines = validation.data.content.split('\n');
       
       // Check for combined React imports
       const hasCombinedReact = lines.some(l => l.includes('import React') || l.includes('useRef') || l.includes('useState'));
