@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-09-17T08:52:03.141Z",
+  "results": [
+    {
+      "id": "simple",
+      "prompt": "{\n  \"name\": \"Simple Portfolio\",\n  \"description\": \"A minimal portfolio landing page with a hero section, dark mode, clean typography\",\n  \"mood\": [\"minimal\", \"dark\", \"clean\"],\n  \"industry\": \"personal portfolio\"\n}",
+      "passed": false,
+      "timedOut": false,
+      "stages": {
+        "syntaxValidation": {
+          "passed": false,
+          "errors": []
+        },
+        "nextBuild": {
+          "passed": false,
+          "output": ""
+        },
+        "checkpoint": {
+          "passed": false,
+          "successCount": 0,
+          "totalCount": 0
+        },
+        "qaGate": {
+          "passed": false,
+          "fixTickets": 0
+        },
+        "critic": {
+          "passed": false,
+          "confidence": 0
+        }
+      },
+      "error": "All providers in fallback chain failed:\n  ollama: [ollama/qwen2.5-coder:7b] Error: an error was encountered while running the model: CUDA error: unknown error",
+      "durationMs": 17857
+    }
+  ],
+  "allPassed": false
+}

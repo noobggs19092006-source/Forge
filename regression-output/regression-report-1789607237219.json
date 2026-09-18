@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-09-17T01:07:17.219Z",
+  "results": [
+    {
+      "id": "simple",
+      "prompt": "{\n  \"name\": \"Simple Portfolio\",\n  \"description\": \"A minimal portfolio landing page with a hero section, dark mode, clean typography\",\n  \"mood\": [\"minimal\", \"dark\", \"clean\"],\n  \"industry\": \"personal portfolio\"\n}",
+      "passed": false,
+      "timedOut": false,
+      "stages": {
+        "syntaxValidation": {
+          "passed": false,
+          "errors": []
+        },
+        "nextBuild": {
+          "passed": false,
+          "output": ""
+        },
+        "checkpoint": {
+          "passed": false,
+          "successCount": 0,
+          "totalCount": 0
+        },
+        "qaGate": {
+          "passed": false,
+          "fixTickets": 0
+        },
+        "critic": {
+          "passed": false,
+          "confidence": 0
+        }
+      },
+      "error": "All providers in fallback chain failed:\n  gemini: [gemini/gemini-2.5-flash] Error: {\"error\":{\"code\":503,\"message\":\"This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.\",\"status\":\"UNAVAILABLE\"}}",
+      "durationMs": 1786
+    }
+  ],
+  "allPassed": false
+}

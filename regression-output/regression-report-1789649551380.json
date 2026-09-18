@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-09-17T12:52:31.380Z",
+  "results": [
+    {
+      "id": "simple",
+      "prompt": "{\n  \"name\": \"Simple Portfolio\",\n  \"description\": \"A minimal portfolio landing page with a hero section, dark mode, clean typography\",\n  \"mood\": [\"minimal\", \"dark\", \"clean\"],\n  \"industry\": \"personal portfolio\"\n}",
+      "passed": false,
+      "timedOut": false,
+      "stages": {
+        "syntaxValidation": {
+          "passed": false,
+          "errors": []
+        },
+        "nextBuild": {
+          "passed": false,
+          "output": ""
+        },
+        "checkpoint": {
+          "passed": false,
+          "successCount": 0,
+          "totalCount": 0
+        },
+        "qaGate": {
+          "passed": false,
+          "fixTickets": 0
+        },
+        "critic": {
+          "passed": false,
+          "confidence": 0
+        }
+      },
+      "error": "All providers in fallback chain failed:\n  groq: 413 Payload Too Large: {\"error\":{\"message\":\"Request too large for model `qwen/qwen3.8-27b` in organization `org_01katykc10eg7t5fa901n5k2r1` service tier `on_demand` on input tokens per minute (ITPM): Limit 7000, Requested 9334, please reduce your message size and try again. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+      "durationMs": 47244
+    }
+  ],
+  "allPassed": false
+}

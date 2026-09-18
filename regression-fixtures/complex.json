@@ -1,0 +1,6 @@
+{
+  "name": "E-commerce Storefront",
+  "description": "A full e-commerce storefront with home, product listing, product detail, cart, checkout, and user dashboard pages",
+  "mood": ["bold", "accessible", "conversion-optimized"],
+  "industry": "ecommerce"
+}

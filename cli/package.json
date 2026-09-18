@@ -1,0 +1,23 @@
+{
+  "name": "@forge/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Forge CLI — Phase 1 shell for the agentic frontend generation pipeline",
+  "bin": {
+    "forge": "./dist/src/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@forge/core": "workspace:*",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0"
+  }
+}

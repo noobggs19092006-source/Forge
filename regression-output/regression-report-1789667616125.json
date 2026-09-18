@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-09-17T17:53:36.125Z",
+  "results": [
+    {
+      "id": "simple",
+      "prompt": "{\n  \"name\": \"Simple Portfolio\",\n  \"description\": \"A minimal portfolio landing page with a hero section, dark mode, clean typography\",\n  \"mood\": [\"minimal\", \"dark\", \"clean\"],\n  \"industry\": \"personal portfolio\"\n}",
+      "passed": false,
+      "timedOut": false,
+      "stages": {
+        "syntaxValidation": {
+          "passed": false,
+          "errors": []
+        },
+        "nextBuild": {
+          "passed": false,
+          "output": ""
+        },
+        "checkpoint": {
+          "passed": false,
+          "successCount": 0,
+          "totalCount": 0
+        },
+        "qaGate": {
+          "passed": false,
+          "fixTickets": 0
+        },
+        "critic": {
+          "passed": false,
+          "confidence": 0
+        }
+      },
+      "error": "All providers in fallback chain failed:\n  openrouter: [openrouter/google/gemini-2.5-flash] Error: 402 Payment Required: {\"error\":{\"message\":\"This request requires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3371. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account\",\"code\":402,\"metadata\":{\"limit_source\":\"openrouter_credits\",\"remedy_hint\":\"Add credits at https://openrouter.ai/settings/credits, or lower max_tokens / prompt size to fit your remaining balance.\",\"provider_name\":null,\"previous_errors\":[{\"code\":402,\"message\":\"This request requires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3371. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account\"},{\"code\":402,\"message\":\"This request requires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3371. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account\"},{\"code\":402,\"message\":\"This request requires more credits, or fewer max_tokens. You requested up to 4096 tokens, but can only afford 3371. To increase, visit https://openrouter.ai/settings/credits and upgrade to a paid account\"}]}},\"user_id\":\"user_3CCAKGIHaMWURPJk7ZH6V0z7pMI\"}",
+      "durationMs": 406
+    }
+  ],
+  "allPassed": false
+}

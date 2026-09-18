@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-09-17T17:57:16.056Z",
+  "results": [
+    {
+      "id": "simple",
+      "prompt": "{\n  \"name\": \"Simple Portfolio\",\n  \"description\": \"A minimal portfolio landing page with a hero section, dark mode, clean typography\",\n  \"mood\": [\"minimal\", \"dark\", \"clean\"],\n  \"industry\": \"personal portfolio\"\n}",
+      "passed": false,
+      "timedOut": false,
+      "stages": {
+        "syntaxValidation": {
+          "passed": false,
+          "errors": []
+        },
+        "nextBuild": {
+          "passed": false,
+          "output": ""
+        },
+        "checkpoint": {
+          "passed": false,
+          "successCount": 0,
+          "totalCount": 0
+        },
+        "qaGate": {
+          "passed": false,
+          "fixTickets": 0
+        },
+        "critic": {
+          "passed": false,
+          "confidence": 0
+        }
+      },
+      "error": "All providers in fallback chain failed:\n  groq: {\"error\":{\"message\":\"Rate limit reached for model `qwen/qwen3.8-27b` in organization `org_01katykc10eg7t5fa901n5k2r1` service tier `on_demand` on output tokens per minute (OTPM): Limit 1000, Used 999, Requested 576. Please try again in 34.5s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing\",\"type\":\"tokens\",\"code\":\"rate_limit_exceeded\"}}\n",
+      "durationMs": 75318
+    }
+  ],
+  "allPassed": false
+}

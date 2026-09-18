@@ -1,0 +1,6 @@
+{
+  "name": "Simple Portfolio",
+  "description": "A minimal portfolio landing page with a hero section, dark mode, clean typography",
+  "mood": ["minimal", "dark", "clean"],
+  "industry": "personal portfolio"
+}

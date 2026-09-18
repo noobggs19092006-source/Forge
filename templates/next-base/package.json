@@ -1,0 +1,6 @@
+{
+  "name": "@forge/template-next-base",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next.js App Router base template for Forge-generated projects"
+}

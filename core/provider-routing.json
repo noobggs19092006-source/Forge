@@ -1,0 +1,55 @@
+{
+  "stages": {
+    "intake": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    },
+    "architect": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    },
+    "design-brain": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    },
+    "motion-brain": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    },
+    "codegen": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    },
+    "qa-gate": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    },
+    "critic": {
+      "tier": "cloud",
+      "model": "gemini-2.5-flash"
+    }
+  },
+  "fallbackOrder": [
+    "ollama"
+  ],
+  "codegenFallbackOrder": [
+    "ollama"
+  ],
+  "rateLimitDelayMs": 1000,
+  "ollama": {
+    "baseUrl": "http://localhost:11434",
+    "defaultModel": "nemotron-3-ultra:cloud"
+  },
+  "gemini": {
+    "defaultModel": "gemini-2.5-flash"
+  },
+  "cerebras": {
+    "defaultModel": "gpt-oss-120b"
+  },
+  "nvidiaNim": {
+    "defaultModel": "nvidia/llama-3.1-nemotron-70b-instruct"
+  },
+  "openrouter": {
+    "defaultModel": "google/gemma-4-31b-it:free"
+  }
+}

@@ -1,0 +1,1 @@
+throw new Error(`Could not parse JSON for ${fileSpec.path} from response`);
