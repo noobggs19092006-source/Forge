@@ -536,7 +536,9 @@ CRITICAL RULES:
 
 ${fileSpec.path === 'postcss.config.js' ? `
 SPECIFIC POSTCSS.CONFIG.JS REQUIREMENTS:
-- Use CommonJS module.exports format
+- CRITICAL: Next.js 15 requires plugins to be provided as an object string mapping, NOT an array of require() calls!
+  - MUST format exactly like this: module.exports = { plugins: { 'postcss-import': {}, 'tailwindcss': {}, 'autoprefixer': {}, 'postcss-nested': {} } };
+  - Use CommonJS module.exports format
 - Include plugins: postcss-import, tailwindcss, autoprefixer, postcss-nested (for @layer support)
 - Configure postcss-nested to enable @layer and nesting
 - Output a minimal valid config
