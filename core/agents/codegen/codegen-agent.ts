@@ -970,7 +970,7 @@ export default ${componentName};
         const lines = validation.data.content!.split('\n');
         let insertIdx = 0;
         for (let i = 0; i < lines.length; i++) {
-          if (lines[i] && lines[i].startsWith('import ')) {
+          if (lines[i]?.startsWith('import ')) {
             insertIdx = i + 1;
           }
         }
