@@ -933,6 +933,10 @@ export default function ${safeName}() {
         content = content.replace(/import\s*\{[^}]*(?:Lenis|useLenis)[^}]*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
         content = content.replace(/,\s*\{[^}]*(?:Lenis|useLenis)[^}]*\}\s*(from\s*['"](?:\.\.\/)+lib\/lenis-provider['"])/g, ' $1');
         
+        // Convert hallucinatory default imports to named imports
+        content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
+        content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
+        
         let missingImports = '';
         if (fileSpec.path !== 'hooks/useLenis.ts' && content.includes('useLenis') && !content.includes("import { useLenis } from")) {
             missingImports += "import { useLenis } from '../hooks/useLenis';\n";
