@@ -850,6 +850,51 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       }
     }
 
+
+    // Fix unmatched quotes in use client
+    if (validation.data && validation.data.content) {
+      validation.data.content = validation.data.content.replace(/^\s*["']use client;\s*\n/gm, "");
+    }
+    
+    // Fix CSS var() syntax in JS objects
+    if (validation.data && validation.data.content) {
+      validation.data.content = validation.data.content.replace(/duration:\s*var\((.*?)\)/g, "duration: 'var($1)'");
+    }
+
+    // Fix inline arrow functions in logical OR
+    if (validation.data && validation.data.content) {
+      validation.data.content = validation.data.content.replace(/\|\|\s*\([a-zA-Z0-9_: ]*\)\s*=>\s*\{\}/g, "|| (() => {})");
+    }
+
+    // Fix page.tsx raw HTML hallucination
+    if (validation.data && validation.data.content && fileSpec.path.endsWith('/page.tsx')) {
+      const content = validation.data.content.trim();
+      if (content.startsWith('<html')) {
+        let innerContent = content;
+        // Try to extract body
+        const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        if (bodyMatch) {
+            innerContent = bodyMatch[1];
+        } else {
+            innerContent = content.replace(/<\/?(html|head|body|meta|title|link)[^>]*>/gi, "");
+        }
+        
+        const componentName = fileSpec.path === 'app/page.tsx' ? 'HomePage' : fileSpec.path.split('/').slice(-2)[0] + 'Page';
+        const safeName = componentName.charAt(0).toUpperCase() + componentName.slice(1).replace(/[^a-zA-Z0-9]/g, '');
+        
+        validation.data.content = `import React from 'react';
+
+export default function ${safeName}() {
+  return (
+    <main>
+      ${innerContent}
+    </main>
+  );
+}
+`;
+      }
+    }
+
 // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
