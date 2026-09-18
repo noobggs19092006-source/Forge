@@ -40,6 +40,7 @@ RULES:
 4. Set wants3D to true ONLY if the user explicitly requests 3D, WebGL, or immersive elements.
 5. Set darkMode to true if the user mentions dark mode, dark theme, or if the mood strongly implies it (e.g., "dark", "moody", "noir").
 6. For "features", break down what sections or elements the user wants. If they say "portfolio hero", features might be ["hero section with name/title", "animated background", "call-to-action link"].
+7. YOU MUST OUTPUT EVERY SINGLE FIELD DEFINED IN THE JSON SCHEMA EXACTLY AS NAMED. Do not omit ANY keys (like 'audience', 'constraints', or 'references') even if they aren't mentioned in the prompt. Infer reasonable defaults instead (e.g., "General web users" for audience, [] for constraints).
 
 Respond with valid JSON only. No explanation, no markdown fences.`;
 
