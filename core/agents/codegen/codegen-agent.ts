@@ -246,7 +246,13 @@ ${JSON.stringify(input.motionPlan, null, 2)}`;
         path: 'components/Navbar.tsx',
         type: 'component',
         purpose: 'Navigation component with active route highlighting',
-        dependencies: ['hooks/useLenis.ts'],
+        dependencies: ['hooks/useLenis.ts', 'components/Navbar.module.css'],
+      });
+      files.push({
+        path: 'components/Navbar.module.css',
+        type: 'style',
+        purpose: 'Navbar CSS module styles',
+        dependencies: [],
       });
     }
 
@@ -270,6 +276,10 @@ ${JSON.stringify(input.motionPlan, null, 2)}`;
       const pagePath = page.path === '/' ? 'app/page.tsx' : `app${page.path}/page.tsx`;
       const pageDeps: string[] = ['app/layout.tsx', 'app/globals.css'];
       
+      // Add CSS module for page
+      const pageCssModulePath = page.path === '/' ? 'app/page.module.css' : `app${page.path}/page.module.css`;
+      pageDeps.push(pageCssModulePath);
+      
       // Only add Navbar/Footer if sitemap specifies them
       const sharedLayout = input.sitemap.sharedLayout;
       if (sharedLayout.navType !== 'none') {
@@ -284,6 +294,14 @@ ${JSON.stringify(input.motionPlan, null, 2)}`;
         type: 'page',
         purpose: page.purpose,
         dependencies: pageDeps,
+      });
+
+      // Add CSS module file for the page
+      files.push({
+        path: pageCssModulePath,
+        type: 'style',
+        purpose: `${page.path === '/' ? 'Home' : page.path.split('/').pop()} page CSS module styles`,
+        dependencies: [],
       });
     }
 
@@ -399,7 +417,7 @@ SPECIFIC NEXT.CONFIG.JS REQUIREMENTS:
 - Use standard CommonJS module.exports format (NOT ES modules, NO import/export)
 - Do NOT use TypeScript
 - For monorepo compatibility, set outputFileTracingRoot to the project root
-- To disable Turbopack and use webpack, omit experimental.turbo entirely (webpack is default)
+- Do NOT include turbopack config (Next.js 15.0.0 does not support it)
 - Output a minimal valid config: module.exports = { outputFileTracingRoot: __dirname }
 - Do NOT use path aliases like @/lib -- this is a CommonJS file, aliases only work in TypeScript/ES modules
 - Do NOT include any import statements
@@ -414,13 +432,14 @@ SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
 - Import LenisProvider from '../lib/lenis-provider' (relative path from app/ to lib/)
 - MUST NOT use 'use client' directive (this is a Server Component)
 - NEVER use styled-jsx (e.g. <style jsx>). It is strictly forbidden in Server Components. If you need global styles, rely on the import of './globals.css'.
-- Wrap children with LenisProvider (MUST be inside the <body> tag, do NOT wrap the <html> tag with LenisProvider)
+- Wrap children with LenisProvider EXACTLY ONCE (MUST be inside the <body> tag, do NOT wrap the <html> tag with LenisProvider)
 - Set data-theme="dark" on html element for dark mode
 - Use font-display: optional for Google Fonts (CLS = 0)
 - TYPE the children prop: children: React.ReactNode (NOT implicit any)
   - DO NOT import any non-existent hooks or utilities like 'use-client-effect'. Only import what is strictly required.
   - MUST export default function RootLayout({ children }: { children: React.ReactNode })
   - MUST use default import: import LenisProvider from '../lib/lenis-provider' (DO NOT use named import)
+- DO NOT use CSS Modules in layout.tsx (there is no layout.module.css). Use plain className="..." strings or global CSS variables via var(--token-name) directly in className.
 ` : ''}
 
 ${fileSpec.path === 'app/page.tsx' ? `
@@ -438,6 +457,22 @@ SPECIFIC APP/PAGE.TSX REQUIREMENTS:
 - DO NOT import Footer in page.tsx - Footer is rendered via layout.tsx
 - DO NOT import components that don't exist (e.g., About, Portfolio, Contact) unless they are in the sitemap sections above
 - Use proper semantic HTML structure
+- CRITICAL: page.tsx is a LEAF COMPONENT — it does NOT receive or render a 'children' prop. Only layout.tsx receives {children}. DO NOT write {children} anywhere in page.tsx. Render the actual section components (e.g. <Hero />) directly in your JSX instead.
+- CRITICAL: This file does NOT import a CSS module and must NEVER reference \`styles\` in any form — not styles.x, not styles['x'], not in a concatenation like styles['x'] + ' foo', not in a template literal. Use plain string className values only, e.g. className="my-section" not className={styles['my-section']}.
+- CRITICAL: Every section component (Hero, ContactForm, BioSection, etc.) MUST be imported from its own file in components/ and used as <ComponentName />. NEVER write a local implementation of a component in page.tsx if you have already imported it under the same name — that causes a duplicate-identifier error. page.tsx should contain ONLY import statements and a single top-level page component that composes the imported section components.
+` : ''}
+
+${fileSpec.path.match(/^app\/.*\/page\.tsx$/) ? `
+SPECIFIC PAGE.TSX REQUIREMENTS (for all pages under app/):
+- MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line)
+- Import LenisProvider from '../../lib/lenis-provider' (relative path from app/*/ to lib/)
+- Import section components from '../../components/ComponentName' (relative path)
+- ONLY import and render section components that EXIST in the sitemap sections array for THIS page
+- Import styles from './page.module.css' (the CSS module is in the SAME directory)
+- Use className={styles['class-name']} for all styled elements (bracket notation for kebab-case)
+- Use proper semantic HTML structure: <main> wrapper, sections with IDs
+- DO NOT import Footer - Footer is rendered via layout.tsx
+- DO NOT include <script> tags in JSX
 ` : ''}
 
 ${fileSpec.path === 'app/globals.css' ? `
@@ -488,6 +523,19 @@ SPECIFIC FOOTER.MODULE.CSS REQUIREMENTS:
 - DO NOT invent variable names like --surface, --on-surface -- they do not exist in globals.css
 ` : ''}
 
+${fileSpec.path.match(/^app\/.*\/page\.module\.css$/) ? `
+SPECIFIC PAGE.MODULE.CSS REQUIREMENTS (for all pages under app/):
+- CSS Module file for page component
+- Use CSS custom properties from design tokens (use ONLY these exact variable names from globals.css):
+  * Color: var(--primary-light), var(--primary-dark), var(--accent-light), var(--accent-dark) -- NO other color variables
+  * Spacing: var(--base-unit), var(--md), var(--lg), etc. -- use EXACT spacing token names from globals.css
+  * Typography: var(--font-text-family), var(--clamp-*), var(--line-height-*)
+- Use var() for all design token references
+- Clean, accessible styling
+- DO NOT use :root selector -- CSS Modules scope styles automatically, use class selectors instead
+- DO NOT invent variable names like --surface, --on-surface -- they do not exist in globals.css
+` : ''}
+
 ${fileSpec.path === 'components/Contact.tsx' ? `
 SPECIFIC CONTACT.TSX REQUIREMENTS:
 - MUST start with 'use client;' as a STRING LITERAL at the very top
@@ -521,16 +569,19 @@ import styles from './Hero.module.css';
 import '../app/globals.css';
 import { useLenis } from '../hooks/useLenis';
 import useReducedMotion from '../hooks/useReducedMotion';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { gsapConfig } from '../lib/gsap-config';
 
 CRITICAL RULES:
 - 'use client'; is a STRING on line 1 — NOT a comment (// use client is WRONG)
 - import styles from './Hero.module.css' MUST be present (line 2)
 - Use className={styles.heroContainer}, className={styles.heroTitle} etc. — NOT className="heroContainer"
 - useReducedMotion is a DEFAULT import (no curly braces): import useReducedMotion from '../hooks/useReducedMotion'
+- useReducedMotion RETURNS A BOOLEAN, NOT AN ARRAY: const prefersReducedMotion = useReducedMotion(); (NOT const [isReducedMotion] = useReducedMotion())
 - useLenis is a NAMED import (with curly braces): import { useLenis } from '../hooks/useLenis'
+- Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values
 - Export default Hero component at the bottom
 ` : ''}
 
@@ -550,10 +601,11 @@ SPECIFIC GSAP-CONFIG.TS REQUIREMENTS:
 - Register ScrollTrigger plugin: gsap.registerPlugin(ScrollTrigger)
   - DO NOT USE ScrollTrigger.register(). It does not exist. Only use gsap.registerPlugin(ScrollTrigger).
 - Export motion constants: defaultEasing, defaultDuration, staggerInterval
+- Export a config object: export const gsapConfig = { defaultEasing, defaultDuration, staggerInterval };
 - Export setupGSAP() function that configures GSAP and ScrollTrigger. Use ONLY valid GSAP APIs: gsap.defaults({ ease: defaultEasing, duration: defaultDuration }) and gsap.matchMedia().add("(prefers-reduced-motion: reduce)", () => { gsap.ticker.fps(1); })
-- Export GSAPInitializer component for app/layout.tsx
 - Use 'use client' directive
-- EXPORT DEFAULT GSAPInitializer at the end of the file: export default GSAPInitializer
+- DO NOT export any JSX-returning component from this file — this is a .ts file (NOT .tsx) and JSX is illegal here. Only export plain constants and functions.
+- DO NOT define GSAPInitializer or any React component in this file.
 ` : ''}
 
 ${fileSpec.path === 'lib/lenis-provider.tsx' ? `
@@ -567,6 +619,16 @@ SPECIFIC LENIS-PROVIDER.TSX REQUIREMENTS:
 - MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (with single quotes, on its own line)
 - EXPORT DEFAULT LenisProvider at the end of the file: export default LenisProvider
 - TYPE the component props to accept children: interface LenisProviderProps { children: React.ReactNode } and use function LenisProvider({ children }: LenisProviderProps) instead of React.FC
+- CRITICAL SYNTAX: When attaching scroll event listeners, the call MUST close with \`});\` NOT \`};\`.
+  Count your closing braces AND closing parens — \`lenis.on(\` opens a function call that needs a matching \`)\`:
+  CORRECT:
+    lenis.on('scroll', ({ scroll }) => {
+      // handler body
+    });   // <-- closing } for the arrow-function body, then ) for lenis.on(, then ;
+  WRONG:
+    lenis.on('scroll', ({ scroll }) => {
+      // handler body
+    };    // <-- missing the ) — this is a syntax error
 ` : ''}
 
 ${fileSpec.path === 'hooks/useReducedMotion.ts' ? `
@@ -623,7 +685,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       ? `EXACT CSS VARIABLE NAMES FROM globals.css:\n${actualVars.map(v => `  ${v}`).join('\n')}\n`
       : exactCssVariables;
 
-    // Compute section styling requirement text
+// Compute section styling requirement text
     const sectionStyling = fileSpec.type === 'section'
         ? ('GENERAL SECTION COMPONENT STYLING REQUIREMENT (applies to every section component):\n' +
            '- Use CSS Modules for all component-scoped styling: import styles from \'./' +
@@ -633,16 +695,41 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
              '- IMPORT ScrollTrigger CORRECTLY: import { ScrollTrigger } from \'gsap/ScrollTrigger\';\n' +
              '- IMPORT useReducedMotion CORRECTLY: import useReducedMotion from \'../hooks/useReducedMotion\'; (It is a DEFAULT export, do NOT use curly braces)\n' +
              '- IMPORT useLenis CORRECTLY: import { useLenis } from \'../hooks/useLenis\'; (It is a NAMED export, do NOT import it from lenis-provider)\n' +
+             '- IMPORT gsapConfig CORRECTLY: import { gsapConfig } from \'../lib/gsap-config\'; (Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values)\n' +
              '- ALWAYS include ALL imports used in the file! If you use lenis, you MUST import it!\n' +
              '- For React hooks (useEffect, useRef, useState), ALWAYS import them explicitly: import React, { useEffect, useRef, useState } from \'react\';\n' +
 
-
-             '- PROPS: ALWAYS declare an interface for your props (e.g. interface Props { id?: string }) and accept id in your component signature.\n' +
-             '- CRITICAL RULE ABOUT IMPORTS: You MUST NOT write any duplicate imports. If you imported react hooks at the top, DO NOT write \'import { useEffect } from "react";\' again! DO NOT write \'import gsap from "gsap";\' again! ONLY ONE IMPORT PER MODULE IS ALLOWED.\n' +
+           '- PROPS: ALWAYS declare an interface for your props (e.g. interface Props { id?: string }) and accept id in your component signature.\n' +
+           '- CRITICAL RULE ABOUT IMPORTS: You MUST NOT write any duplicate imports. If you imported react hooks at the top, DO NOT write \'import { useEffect } from "react";\' again! DO NOT write \'import gsap from "gsap";\' again! ONLY ONE IMPORT PER MODULE IS ALLOWED.\n' +
 
            '- Use className={styles.yourClassName} for every styled element. CRITICAL: For CSS Modules with dashed class names, you MUST use bracket notation. Dot notation (styles.some-dashed-class) is INVALID TypeScript and will break the build. Example:\n' +
            '  ❌ <div className={styles.hero-section}>\n' +
            '  ✅ <div className={styles[\'hero-section\']}>\n' +
+           '- Use var(--token-name) inside the CSS module to reference design tokens from globals.css -- never hardcode raw color/spacing values\n' +
+           '- The matching .module.css file for this component is already in your file list as a dependency -- write real, complete styles into it, don\'t leave it as a stub\n' +
+           '- DO NOT use :root selector in CSS Modules -- CSS Modules scope styles automatically, use class selectors instead\n\n' +
+           varListString +
+           `CRITICAL: In your .module.css file, you MUST use ONLY these variables. NEVER invent other names.\n`)
+        : '';
+
+    // Compute component styling requirement text (for components with CSS modules like Navbar, Footer)
+    const componentStyling = (fileSpec.type === 'component' && (fileSpec.path === 'components/Navbar.tsx' || fileSpec.path === 'components/Footer.tsx'))
+        ? ('GENERAL COMPONENT STYLING REQUIREMENT (applies to components with CSS modules):\n' +
+           '- CRITICAL: This file MUST start with \'use client\'; on line 1 (as a string literal, NOT a comment). It uses Next.js client-side hooks (e.g. usePathname) which require this directive.\n' +
+           '- Use CSS Modules for all component-scoped styling: import styles from \'./' +
+           fileSpec.path.replace('components/', '').replace('.tsx', '') + '.module.css\'\n' +
+           '- Do NOT use inline styles, styled-jsx, or <style jsx> tags\n' +
+             '- IMPORTANT: For all imports from lib or hooks directories, use ONE level up relative path (e.g. \'../lib/lenis-provider\' or \'../hooks/useReducedMotion\' or \'../lib/gsap-config\'). Do NOT use \'../../\'.\n' +
+             '- ALWAYS include ALL imports used in the file!\n' +
+             '- For React hooks (useEffect, useRef, useState), ALWAYS import them explicitly: import React, { useEffect, useRef, useState } from \'react\';\n' +
+           '- DO NOT import lenisInstance or any named export from lenis-provider other than LenisContext. lenis-provider only exports LenisContext (named) and LenisProvider (default).\n' +
+
+           '- PROPS: ALWAYS declare an interface for your props (e.g. interface Props { id?: string }) and accept id in your component signature.\n' +
+           '- CRITICAL RULE ABOUT IMPORTS: You MUST NOT write any duplicate imports. If you imported react hooks at the top, DO NOT write \'import { useEffect } from "react";\' again! DO NOT write \'import gsap from "gsap";\' again! ONLY ONE IMPORT PER MODULE IS ALLOWED.\n' +
+
+           '- Use className={styles.yourClassName} for every styled element. CRITICAL: For CSS Modules with dashed class names, you MUST use bracket notation. Dot notation (styles.some-dashed-class) is INVALID TypeScript and will break the build. Example:\n' +
+           '  ❌ <div className={styles.nav-link}>\n' +
+           '  ✅ <div className={styles[\'nav-link\']}>\n' +
            '- Use var(--token-name) inside the CSS module to reference design tokens from globals.css -- never hardcode raw color/spacing values\n' +
            '- The matching .module.css file for this component is already in your file list as a dependency -- write real, complete styles into it, don\'t leave it as a stub\n' +
            '- DO NOT use :root selector in CSS Modules -- CSS Modules scope styles automatically, use class selectors instead\n\n' +
@@ -709,7 +796,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
         'Output valid JSON matching the SingleFileOutput schema ONLY.';
 
     const messages = [
-      { role: 'user' as const, content: singleFilePrompt + sectionStyling + cssModuleStyling + outputFormat },
+      { role: 'user' as const, content: singleFilePrompt + sectionStyling + componentStyling + cssModuleStyling + outputFormat },
     ];
 
     const result = await this.provider.complete({
@@ -780,6 +867,22 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
                  !trimmed.startsWith('export\\n');
         })
         .join('\n');
+      // Remove turbopack config (Next.js 15.0.0 doesn't support it)
+      validation.data.content = validation.data.content.replace(/turbopack:\s*\{[^}]+\},\s*/g, '');
+      validation.data.content = validation.data.content.replace(/,\s*turbopack:\s*\{[^}]+\}/g, '');
+      validation.data.content = validation.data.content.replace(/turbopack:\s*\{[^}]+\}/g, '');
+    }
+
+    // Fix globals.css - normalize negative OKLCH angles to positive (0-360)
+    if (validation.data && validation.data.content && fileSpec.path === 'app/globals.css') {
+      validation.data.content = validation.data.content.replace(
+        /oklch\(([^)]+)\s+(-?\d+\.?\d*)\s+(-?\d+\.?\d*)\)/g,
+        (match, lightness, chroma, hue) => {
+          const h = parseFloat(hue);
+          const normalizedHue = h < 0 ? h + 360 : h;
+          return `oklch(${lightness} ${chroma} ${normalizedHue})`;
+        }
+      );
     }
 
 
@@ -815,17 +918,76 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
         validation.data.content = validation.data.content.replace(/^\s*(?:\/\*|\/\/)?\s*["']?use client["']?[\s;\*\/]*\n?/gm, "");
         validation.data.content = "'use client';\n" + validation.data.content.trimStart();
       }
+
+      // Fix 3: Auto-inject 'use client' for .tsx component files that use client-side hooks
+      // but omit the directive (e.g. Navbar using usePathname without 'use client').
+      const isClientComponent = fileSpec.path.endsWith('.tsx') &&
+        (validation.data.content.includes('usePathname') ||
+         validation.data.content.includes('useRouter') ||
+         validation.data.content.includes('useSearchParams') ||
+         validation.data.content.includes('useState') ||
+         validation.data.content.includes('useEffect') ||
+         validation.data.content.includes('useRef'));
+      if (isClientComponent && !validation.data.content.includes("'use client'") && !validation.data.content.includes('"use client"')) {
+        validation.data.content = "'use client';\n" + validation.data.content.trimStart();
+      }
       
       // Fix styled-jsx hallucinations
       validation.data.content = validation.data.content.replace(/<style\s+jsx[\s\S]*?<\/style>/g, "");
       validation.data.content = validation.data.content.replace(/import\s+.*?\s+from\s+['"]styled-jsx.*?['"];?/g, "");
+
+      // Fix 2: Strip JSX-returning GSAPInitializer from gsap-config.ts
+      // A .ts file cannot contain JSX — the model sometimes hallucinates this component despite the prompt.
+      if (fileSpec.path === 'lib/gsap-config.ts') {
+        validation.data.content = validation.data.content
+          // Remove the whole GSAPInitializer function body
+          .replace(/const\s+GSAPInitializer[^=]*=\s*\([^)]*\)\s*=>\s*\{[\s\S]*?\};?\n?/g, '')
+          .replace(/function\s+GSAPInitializer[^{]*\{[\s\S]*?^\}/gm, '')
+          // Remove any JSX lines that remain (e.g. return <React.Fragment>...)
+          .replace(/return\s+<[\s\S]*?>;?\n?/g, '')
+          // Remove export default GSAPInitializer
+          .replace(/export\s+default\s+GSAPInitializer;?\n?/g, '')
+          // Remove React import if it was only there for GSAPInitializer
+          .replace(/import\s+React(?:,\s*\{[^}]*\})?\s+from\s+'react';?\n?/g, '');
+      }
     }
 
         
-    // Fix layout.tsx raw HTML hallucination
+    // Fix layout.tsx: strip CSS module refs and de-duplicate LenisProvider
+    // regardless of whether the model wrapped everything in raw HTML or produced
+    // an otherwise-valid component -- these issues can occur independently.
+    if (validation.data && validation.data.content && fileSpec.path === 'app/layout.tsx') {
+      validation.data.content = validation.data.content.replace(
+        /<LenisProvider>([\s\S]*?)<LenisProvider>([\s\S]*?)<\/LenisProvider>([\s\S]*?)<\/LenisProvider>/gi,
+        '<LenisProvider>$1$2$3</LenisProvider>'
+      );
+      validation.data.content = validation.data.content.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");
+      validation.data.content = validation.data.content.replace(/className=\{styles\.([^}]+)\}/g, "className='$1'");
+      validation.data.content = validation.data.content.replace(/import\s+styles\s+from\s+['"][^'"]+\.module\.css['"];?\n?/g, '');
+    }
+
+    // Fix layout.tsx raw HTML hallucination (full rebuild -- only when the model
+    // skipped a React wrapper entirely and emitted a literal <html> document)
     if (validation.data && validation.data.content && fileSpec.path === 'app/layout.tsx') {
       const content = validation.data.content.trim();
       if (content.startsWith('<html')) {
+        // Extract body content if present
+        let innerContent = content;
+        const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        if (bodyMatch) {
+          innerContent = bodyMatch[1] || '';
+        } else {
+          innerContent = content.replace(/<\/?(html|head|body|meta|title|link)[^>]*>/gi, "");
+        }
+        
+        // Remove any existing LenisProvider wrapper from the model's hallucination
+        innerContent = innerContent.replace(/<LenisProvider>([\s\S]*?)<\/LenisProvider>/gi, '$1');
+        
+        // Remove any CSS module references (layout.tsx doesn't have a CSS module)
+        innerContent = innerContent.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");
+        innerContent = innerContent.replace(/className=\{styles\.([^}]+)\}/g, "className='$1'");
+        innerContent = innerContent.replace(/import\s+styles\s+from\s+['"][^'"]+\.module\.css['"];?\n?/g, '');
+        
         validation.data.content = `import './globals.css';
 import LenisProvider from '../lib/lenis-provider';
 
@@ -836,7 +998,18 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    ${content.replace(/{children}/g, '<LenisProvider>{children}</LenisProvider>')}
+    <html lang="en" data-theme="dark">
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=optional" rel="stylesheet" />
+      </head>
+      <body>
+        <LenisProvider>
+          ${innerContent.trim() || '{children}'}
+        </LenisProvider>
+      </body>
+    </html>
   );
 }
 `;
@@ -858,9 +1031,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       validation.data.content = validation.data.content.replace(/^\s*["']use client;\s*\n/gm, "");
     }
     
-    // Fix CSS var() syntax in JS objects
+    // Fix CSS var() syntax in JS objects - all property values in JS objects
     if (validation.data && validation.data.content) {
-      validation.data.content = validation.data.content.replace(/duration:\s*var\((.*?)\)/g, "duration: 'var($1)'");
+      validation.data.content = validation.data.content.replace(/(\w+:\s*)var\((.*?)\)/g, "$1'var($2)'");
     }
 
     // Fix inline arrow functions in logical OR
@@ -883,14 +1056,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         
         const componentName = fileSpec.path === 'app/page.tsx' ? 'HomePage' : (fileSpec.path.split('/').slice(-2)[0] || 'Unknown') + 'Page';
         const safeName = componentName.charAt(0).toUpperCase() + componentName.slice(1).replace(/[^a-zA-Z0-9]/g, '');
+        const isRootPage = fileSpec.path === 'app/page.tsx';
+        const libImportPath = isRootPage ? '../lib/lenis-provider' : '../../lib/lenis-provider';
+        const componentsImportPath = isRootPage ? '../components' : '../../components';
+        const stylesImport = isRootPage ? '' : "\nimport styles from './page.module.css';";
         
-        validation.data.content = `import React from 'react';
+        validation.data.content = `'use client';
+import React from 'react';
+import LenisProvider from '${libImportPath}';${stylesImport}
 
 export default function ${safeName}() {
   return (
-    <main>
-      ${innerContent}
-    </main>
+    <LenisProvider>
+      <main>
+        ${innerContent}
+      </main>
+    </LenisProvider>
   );
 }
 `;
@@ -922,21 +1103,74 @@ export default function ${safeName}() {
       let content = lines.join('\n');
       
       
-      // React JSX attribute fixes
+// React JSX attribute fixes
       content = content.replace(/<meta charset=/g, '<meta charSet=');
       
               content = content.replace(/crossorigin/gi, 'crossOrigin');
         content = content.replace(/crossOrigin(?![=a-zA-Z0-9])/g, 'crossOrigin="anonymous"');
-  
+
+        // Fix JSX syntax errors: missing closing brackets on elements
+        // e.g., <section className={styles['contact-section']}) -> <section className={styles['contact-section']}>
+        content = content.replace(/(\s+)(\w+)=(\{[^}]+\})\)(\s*)>/g, '$1$2=$3$4>');
+        // Fix missing > on JSX elements
+        content = content.replace(/(\s+)(\w+)=(\{[^}]+\})\)(\s*)/g, '$1$2=$3$4');
+
+        // Remove <script> tags from JSX (not valid in React)
+        content = content.replace(/<script[^>]*>[\s\S]*?<\/script>/g, '');
+        content = content.replace(/<script[^>]*\/>/g, '');
+
+        // Fix malformed self-closing tags
+        content = content.replace(/<(\w+)([^>]*)\/ \/>/g, '<$1$2 />');
+        content = content.replace(new RegExp('<(\\\\w+)([^>]*)\\\\/>', 'g'), '<$1$2 />');
+
+        // Fix stray closing parentheses after JSX attributes
+        content = content.replace(/className=\{([^}]+)\}\)(\s*)>/g, "className={$1}$2>");
+        content = content.replace(/className=\{([^}]+)\}\)(\s*)/g, "className={$1}$2");
+        
         // Strip hallucinated Lenis import from lenis-provider
         // Strip ALL hallucinated named imports of Lenis/useLenis from lenis-provider
         content = content.replace(/import\s*\{[^}]*(?:Lenis|useLenis)[^}]*\}\s*from\s*['"](?:\.\.\/)+lib\/lenis-provider['"];?\n?/g, '');
         content = content.replace(/,\s*\{[^}]*(?:Lenis|useLenis)[^}]*\}\s*(from\s*['"](?:\.\.\/)+lib\/lenis-provider['"])/g, ' $1');
+
+        // Fix lenis.on callback missing closing paren: `};` -> `});`
+        // The model sometimes forgets the `)` that closes the lenis.on( call, producing a syntax
+        // error. Repair any `  };` line that follows a lenis.on arrow-function body.
+        if (fileSpec.path === 'lib/lenis-provider.tsx') {
+          content = content.replace(
+            /(lenis\.on\([^)]*,\s*\([^)]*\)\s*=>\s*\{[\s\S]*?)\n(\s*)\};/g,
+            '$1\n$2});'
+          );
+        }
         
         // Convert hallucinatory default imports to named imports
         content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
         content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
-        
+        content = content.replace(/import\s+gsapConfig\s+from\s+['"](?:\.\.\/)+lib\/gsap-config['"];?\n?/g, "import { gsapConfig } from '../lib/gsap-config';\n");
+
+        // Fix 1: strip wrong-path useLenis imports (e.g. '../../hooks/useLenis' from a component)
+        // and any merged import that combines useLenis with other hooks from the wrong path.
+        // The correct path from components/ is '../hooks/useLenis'.
+        content = content.replace(
+          /import\s*\{[^}]*useLenis[^}]*\}\s*from\s*['"](?!\.\.\/hooks\/useLenis)[^'"]+['"];?\n?/g,
+          ''
+        );
+        // Deduplicate: if 'import { useLenis } from' appears more than once, keep only the first.
+        const useLenisDupRe = /(import\s*\{[^}]*useLenis[^}]*\}\s*from\s*['"]\.\.\/hooks\/useLenis['"];?\n?)/g;
+        const useLenisMatches = content.match(useLenisDupRe);
+        if (useLenisMatches && useLenisMatches.length > 1) {
+          let replaced = false;
+          content = content.replace(useLenisDupRe, (m) => {
+            if (!replaced) { replaced = true; return m; }
+            return '';
+          });
+        }
+
+        // Fix 3: Strip hallucinated lenisInstance named import from lenis-provider
+        // (lenis-provider only exports LenisContext and a default LenisProvider — no lenisInstance)
+        content = content.replace(/,\s*\{?\s*lenisInstance\s*\}?/g, '');
+        content = content.replace(/\{?\s*lenisInstance\s*,?\s*\}?\s*from\s*['"][^'"]*lenis-provider['"];?\n?/g, '');
+        content = content.replace(/import\s+\{?\s*lenisInstance\s*\}?\s*from\s*['"][^'"]*['"];?\n?/g, '');
+
         let missingImports = '';
         if (fileSpec.path !== 'hooks/useLenis.ts' && content.includes('useLenis') && !content.includes("import { useLenis } from")) {
             missingImports += "import { useLenis } from '../hooks/useLenis';\n";
@@ -954,10 +1188,24 @@ export default function ${safeName}() {
            }
         }
 
-      if (fileSpec.path === 'app/page.tsx') {
-        // Remove hallucinated styles object usage since page.tsx has no CSS module
-        content = content.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");
-        content = content.replace(/className=\{styles\.([^}]+)\}/g, "className='$1'");
+if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.*\/page\.tsx$/)) {
+        // Remove hallucinated styles object usage since page.tsx has no CSS module.
+        // Use fragment-level replacement (not whole-expression) so it catches styles['x'] inside
+        // concatenations like {styles['x'] + ' foo'} or template literals too.
+        content = content.replace(/styles\['([^']+)'\]/g, "'$1'");
+        content = content.replace(/styles\["([^"]+)"\]/g, "'$1'");
+        content = content.replace(/styles\.([\w-]+)/g, "'$1'");
+        // Clean up any now-trivial expressions like {'x' + ' y'} -> just use the first part
+        // (leave them as-is; they're valid JS even if redundant)
+        // Also strip any remaining `import styles from ...` that snuck in
+        content = content.replace(/import\s+styles\s+from\s+['"]\.\.\/[^'"]+\.module\.css['"];?\n?/g, '');
+        content = content.replace(/import\s+styles\s+from\s+['"][^'"]+\.module\.css['"];?\n?/g, '');
+
+        // Backstop: strip {children} references from page.tsx.
+        // page.tsx is a leaf component — it receives no children prop.
+        // Only layout.tsx receives {children}. Any {children} in page.tsx is always wrong.
+        content = content.replace(/\{children\}/g, '');
+
         // Auto-fix missing component imports for page.tsx
         const componentRegex = /<([A-Z][a-zA-Z0-9]+)/g;
         let match;
@@ -966,18 +1214,121 @@ export default function ${safeName}() {
           usedComponents.add(match[1]);
         }
         
+        // Determine the correct import path for components
+        const isRootPage = fileSpec.path === 'app/page.tsx';
+        const componentsImportPath = isRootPage ? '../components' : '../../components';
+        
         for (const comp of usedComponents) {
           if (comp === 'LenisProvider' || comp === 'React') continue;
+          // Only add import if the component file was actually generated
+          const componentFilePath = `components/${comp}.tsx`;
+          if (!alreadyGenerated.has(componentFilePath)) {
+            continue; // Skip non-existent components
+          }
           if (!content.includes(`import ${comp} from`)) {
-             
+            
              // Ensure we don't put imports above 'use client'
              if (content.trim().startsWith("'use client'") || content.trim().startsWith('"use client"')) {
                  content = content.replace(/['"]use client['"];?\s*/g, '');
-                 content = "'use client';\n" + `import ${comp} from '../components/${comp}';\n` + content;
+                 content = "'use client';\n" + `import ${comp} from '${componentsImportPath}/${comp}';\n` + content;
              } else {
-                 content = `import ${comp} from '../components/${comp}';\n` + content;
+                 content = `import ${comp} from '${componentsImportPath}/${comp}';\n` + content;
              }
 
+          }
+        }
+
+        // Convert raw HTML sections to section components for page.tsx
+        // This handles cases where the LLM generates raw <section> elements instead of using section components
+        const sectionComponentMap: Record<string, string> = {
+          'hero-section': 'Hero',
+          'bio-section': 'Bio',
+          'about-section': 'About',
+          'form-section': 'Form',
+          'contact-section': 'Contact',
+          'skills-section': 'Skills',
+          'footer-section': 'Footer',
+        };
+        
+        for (const [sectionClass, componentName] of Object.entries(sectionComponentMap)) {
+          const componentFilePath = `components/${componentName}.tsx`;
+          // Only replace if the component was actually generated
+          if (alreadyGenerated.has(componentFilePath)) {
+            // Replace <section className='xxx-section'>...</section> with <ComponentName />
+            const sectionRegex = new RegExp(
+              `<section\\s+className=['\"]${sectionClass}['\"][^>]*>[\\s\\S]*?<\\/section>`,
+              'g'
+            );
+            content = content.replace(sectionRegex, `<${componentName} />`);
+            
+            // Also handle self-closing sections
+            const selfClosingRegex = new RegExp(
+              `<section\\s+className=['\"]${sectionClass}['\"][^>]*/>`,
+              'g'
+            );
+            content = content.replace(selfClosingRegex, `<${componentName} />`);
+            
+            // Add import if not present
+            if (!content.includes(`import ${componentName} from`)) {
+              const isRootPage = fileSpec.path === 'app/page.tsx';
+              const componentsImportPath = isRootPage ? '../components' : '../../components';
+              if (content.trim().startsWith("'use client'") || content.trim().startsWith('"use client"')) {
+                content = content.replace(/['"]use client['"];?\s*/g, '');
+                content = "'use client';\n" + `import ${componentName} from '${componentsImportPath}/${componentName}';\n` + content;
+              } else {
+                content = `import ${componentName} from '${componentsImportPath}/${componentName}';\n` + content;
+              }
+            }
+          }
+        }
+
+        // Remove local component definitions that conflict with imports.
+        // Uses brace-counting (not regex) to correctly handle nested JSX.
+        // Covers ANY imported component name, not just a hardcoded list.
+        {
+          // 1. Collect all imported component names (PascalCase identifiers after 'import')
+          const importedNames: string[] = [];
+          const importLineRe = /^import\s+([A-Z][\w]*)\s+from\s+/gm;
+          let imp: RegExpExecArray | null;
+          while ((imp = importLineRe.exec(content)) !== null) {
+            if (imp[1]) importedNames.push(imp[1]);
+          }
+
+          // 2. For each imported name, find and remove any local re-definition
+          for (const name of importedNames) {
+            // Match `const Name = ` or `function Name(` that is NOT the import line
+            const declPattern = new RegExp(
+              `(const\\s+${name}\\s*=\\s*|function\\s+${name}\\s*\\()`,
+              'g'
+            );
+            let declMatch: RegExpExecArray | null;
+            while ((declMatch = declPattern.exec(content)) !== null) {
+              const declStart = declMatch.index;
+              // Find the opening brace of this declaration
+              const braceStart = content.indexOf('{', declStart);
+              if (braceStart === -1) continue;
+              // Brace-count forward to find the matching closing brace
+              let depth = 0;
+              let pos = braceStart;
+              while (pos < content.length) {
+                if (content[pos] === '{') depth++;
+                else if (content[pos] === '}') {
+                  depth--;
+                  if (depth === 0) break;
+                }
+                pos++;
+              }
+              // pos now points to the matching closing '}'
+              // Include optional trailing semicolon and newline
+              let endPos = pos + 1;
+              if (content[endPos] === ';') endPos++;
+              if (content[endPos] === '\n') endPos++;
+              // Remove the entire local definition
+              content = content.slice(0, declStart) + content.slice(endPos);
+              // Reset the regex since content changed
+              declPattern.lastIndex = 0;
+              break; // Only remove the first conflicting definition per name
+            }
           }
         }
 
@@ -992,15 +1343,27 @@ export default function ${safeName}() {
       const trimmedContent = content.trim();
       if (trimmedContent.startsWith('<') && !trimmedContent.includes('import')) {
           const componentName = (fileSpec.path.split('/').pop() || 'Component').replace('.tsx', '').replace('.ts', '');
-          content = `import React, { useEffect, useRef } from 'react';
+          const isPage = fileSpec.path.endsWith('/page.tsx');
+          const isRootPage = fileSpec.path === 'app/page.tsx';
+          const libImportPath = isPage ? (isRootPage ? '../lib/lenis-provider' : '../../lib/lenis-provider') : '../lib/lenis-provider';
+          const componentsImportPath = isPage ? (isRootPage ? '../components' : '../../components') : '../components';
+          const stylesImport = (isPage || trimmedContent.includes('styles')) ? `\nimport styles from './${componentName}.module.css';` : '';
+          const useClientDirective = isPage ? "'use client';\n" : '';
+          const lenisProviderWrap = isPage ? '<LenisProvider>\n      ' : '';
+          const lenisProviderClose = isPage ? '\n    </LenisProvider>' : '';
+          const mainWrap = isPage ? '<main>\n      ' : '';
+          const mainClose = isPage ? '\n    </main>' : '';
+          
+          content = `${useClientDirective}import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';${trimmedContent.includes('styles') ? `\nimport styles from './${componentName}.module.css';` : ''}
+import { ScrollTrigger } from 'gsap/ScrollTrigger';${stylesImport}
+import LenisProvider from '${libImportPath}';
 
 const ${componentName}: React.FC<{ id?: string }> = ({ id }) => {
   return (
-    <>
-      ${trimmedContent}
-    </>
+    ${lenisProviderWrap}${mainWrap}<>
+        ${trimmedContent}
+      </>${mainClose}${lenisProviderClose}
   );
 };
 
@@ -1008,10 +1371,119 @@ export default ${componentName};
 `;
       }
 
-      validation.data.content = content;
+validation.data.content = content;
     }
 
-// BULLETPROOF POSTCSS.CONFIG.JS FIX
+    // Fix hallucinated imports in page.tsx - remove imports for components that don't exist
+    if (validation.data && validation.data.content && fileSpec.path.match(/^app\/.*\/page\.tsx$/)) {
+      const importRegex = /import\s+(\w+)\s+from\s+['"](?:\.\.\/)+components\/(\w+)['"];?/g;
+      let match;
+      while ((match = importRegex.exec(validation.data.content)) !== null) {
+        const importName = match[1];
+        const componentPath = match[2];
+        const componentFilePath = `components/${componentPath}.tsx`;
+        if (!alreadyGenerated.has(componentFilePath)) {
+          // Remove this import
+          validation.data.content = validation.data.content.replace(match[0], '');
+        }
+      }
+
+      // Fix invalid className string concatenation (e.g., className='bio + ' ' + styles['skills-container']')
+      validation.data.content = validation.data.content.replace(
+        /className='([^']+)\s*\+\s*'\s+'\s*\+\s*([^']+)'/g,
+        "className={\$1 + ' ' + \$2}"
+      );
+    }
+
+    // Fix useReducedMotion incorrect destructuring (it returns boolean, not array)
+    if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
+      validation.data.content = validation.data.content.replace(
+        new RegExp('const\\s+\\[\\w+\\]\\s*=\\s*useReducedMotion\\(\\)', 'g'),
+        'const prefersReducedMotion = useReducedMotion()'
+      );
+      validation.data.content = validation.data.content.replace(
+        new RegExp('const\\s+\\{\\s*(\\w+)\\s*\\}\\s*=\\s*useReducedMotion\\(\\)', 'g'),
+        'const $1 = useReducedMotion()'
+      );
+      // Fix invalid GSAP ScrollTrigger callbacks (onLeaveBackward doesn't exist)
+      validation.data.content = validation.data.content.replace(
+        /onLeaveBackward\s*:\s*\(\)\s*=>\s*\{[\s\S]*?\}/g,
+        ''
+      );
+      validation.data.content = validation.data.content.replace(
+        /onLeaveBackward\s*:\s*\(\)\s*=>\s*[^,\n]+/g,
+        ''
+      );
+      // Fix invalid scrollTrigger: false (should be omitted or an object)
+      validation.data.content = validation.data.content.replace(
+        /scrollTrigger\s*:\s*false/g,
+        'scrollTrigger: undefined'
+      );
+// Fix missing gsapConfig import when gsapConfig is used
+      if (validation.data.content.includes('gsapConfig.') && !validation.data.content.includes("import { gsapConfig }")) {
+        const importLine = "import { gsapConfig } from '../lib/gsap-config';\n";
+        if (validation.data.content.includes("import { gsap } from 'gsap';")) {
+          validation.data.content = validation.data.content.replace(
+            "import { gsap } from 'gsap';",
+            "import { gsap } from 'gsap';\n" + importLine
+          );
+        } else if (validation.data.content.includes("import gsap from 'gsap';")) {
+          validation.data.content = validation.data.content.replace(
+            "import gsap from 'gsap';",
+            "import gsap from 'gsap';\n" + importLine
+          );
+        } else {
+          // Add after first import
+          const lines = validation.data.content.split('\n');
+          let insertIdx = 0;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i]?.startsWith('import ')) {
+              insertIdx = i + 1;
+              break;
+            }
+          }
+          lines.splice(insertIdx, 0, importLine.trim());
+          validation.data.content = lines.join('\n');
+        }
+      }
+
+      // Fix useLenis called with arguments (it doesn't accept any - just returns context value)
+      validation.data.content = validation.data.content.replace(
+        /useLenis\(\s*\{[^}]+\}\s*\)/g,
+        'useLenis()'
+      );
+
+      // Fix JSX syntax error: missing closing > on opening tag when style is on next line
+      validation.data.content = validation.data.content.replace(
+        /(<div\s+className=\{styles\['[^']+'\]\})\s*\n\s*style=/g,
+        '$1 style='
+      );
+      // Fix JSX syntax error: missing < before div in Context.Provider return
+      validation.data.content = validation.data.content.replace(
+        /return\s*\(\s*<([A-Z][a-zA-Z0-9]*\.Provider[^>]*>)(\s*\n\s*)div\s+/g,
+        'return ($1$2<div '
+      );
+    }
+
+    // Fix package.json - ensure valid JSON
+    if (validation.data && validation.data.content && fileSpec.path === 'package.json') {
+      try {
+        JSON.parse(validation.data.content);
+      } catch {
+        // Try to fix common issues
+        validation.data.content = validation.data.content
+          .replace(/,\s*}/g, '}')  // Remove trailing commas before }
+          .replace(/,\s*]/g, ']')  // Remove trailing commas before ]
+          .replace(/([^\\])"/g, '$1"')  // Ensure proper escaping
+          .replace(/\\n/g, '\n');
+        // If still invalid, try to fix by adding missing closing brace
+        if (!validation.data.content.trim().endsWith('}')) {
+          validation.data.content = validation.data.content.trim() + '\n}';
+        }
+      }
+    }
+
+    // BULLETPROOF POSTCSS.CONFIG.JS FIX
     if (validation.data && validation.data.content && fileSpec.path.endsWith('postcss.config.js')) {
       validation.data.content = `module.exports = {
   plugins: {
@@ -1021,7 +1493,7 @@ export default ${componentName};
 };`;
     }
 
-// Post-processing: generic missing imports auto-fixer for 7B models
+    // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
       const c = validation.data.content;
@@ -1029,9 +1501,19 @@ export default ${componentName};
       if (c.includes('useRef(') && !c.match(/import.*\buseRef\b/)) missing.push('import { useRef } from "react";');
       if (c.includes('useState(') && !c.match(/import.*\buseState\b/)) missing.push('import { useState } from "react";');
       if (c.includes('gsap.') && !c.match(/import.*\bgsap\b/)) missing.push('import gsap from "gsap";');
+      if (c.includes('ScrollTrigger') && !c.match(/import.*\bScrollTrigger\b/)) missing.push('import { ScrollTrigger } from "gsap/ScrollTrigger";');
+      if (c.includes('styles[') && !c.match(/import styles from/)) missing.push(`import styles from './${fileSpec.path.replace('components/', '').replace('.tsx', '')}.module.css';`);
       
+      // Add 'use client' directive if component uses hooks but doesn't have it at the top
+      const usesClientFeatures = c.includes('useEffect') || c.includes('useState') || c.includes('useRef') || c.includes('useReducedMotion') || c.includes('useLenis');
+      const hasUseClientAtTop = c.trim().startsWith("'use client';") || c.trim().startsWith('"use client";');
+      if (usesClientFeatures && !hasUseClientAtTop) {
+        missing.unshift("'use client';");
+      }
+
       if (missing.length > 0) {
         // Insert missing imports directly after the first import or use client directive
+        // But 'use client' must be at the very top
         const lines = validation.data.content!.split('\n');
         let insertIdx = 0;
         for (let i = 0; i < lines.length; i++) {
@@ -1040,8 +1522,44 @@ export default ${componentName};
           }
         }
         lines.splice(insertIdx, 0, ...missing);
-        validation.data!.content = lines.join('\n');
+        let content = lines.join('\n');
+        
+        // Deduplicate imports (keep first occurrence of each unique import line)
+        const importLines = new Map<string, number>();
+        const dedupedLines = content.split('\n').filter((line, idx) => {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('import ')) {
+            if (importLines.has(trimmed)) {
+              return false; // Skip duplicate
+            }
+            importLines.set(trimmed, idx);
+          }
+          return true;
+        });
+        content = dedupedLines.join('\n');
+        
+        // Ensure 'use client' is at the very top
+        if (content.includes("'use client';") && !content.trim().startsWith("'use client';")) {
+          content = content.replace(/'use client';\s*/g, '');
+          content = "'use client';\n" + content;
+        }
+        if (content.includes('"use client";') && !content.trim().startsWith('"use client";')) {
+          content = content.replace(/"use client";\s*/g, '');
+          content = '"use client";\n' + content;
+        }
+        
+        validation.data!.content = content;
       }
+      
+      // Fix section element formatting - ensure <section> is on one line
+      validation.data.content = validation.data.content.replace(
+        /<section\s+className=\{styles\['([^']+)'\]\}\s*>/g,
+        "<section className={styles['$1']}>"
+      );
+      validation.data.content = validation.data.content.replace(
+        /<section\s+className=\{styles\.([^}]+)\}\s*>/g,
+        "<section className={styles.$1}>"
+      );
     }
     return validation.data;
   }
@@ -1431,6 +1949,10 @@ export default ${componentName};
                          !trimmed.startsWith('export\\n');
                 })
                 .join('\n');
+              // Remove turbopack config (Next.js 15.0.0 doesn't support it)
+              fileOutput.content = fileOutput.content.replace(/turbopack:\s*\{[^}]+\},\s*/g, '');
+              fileOutput.content = fileOutput.content.replace(/,\s*turbopack:\s*\{[^}]+\}/g, '');
+              fileOutput.content = fileOutput.content.replace(/turbopack:\s*\{[^}]+\}/g, '');
             }
             
             
@@ -1440,12 +1962,8 @@ export default ${componentName};
             if (fileOutput.path.endsWith('postcss.config.js')) {
               fileOutput.content = `module.exports = {
   plugins: {
-    'postcss-import': {},
-    'tailwindcss/nesting': {},
     tailwindcss: {},
-    'postcss-nested': {},
-    autoprefixer: {},
-    'postcss-preset-env': { stage: 3, features: { 'nesting-rules': true } }
+    autoprefixer: {}
   }
 };`;
             }

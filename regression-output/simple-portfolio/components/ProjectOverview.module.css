@@ -1,0 +1,32 @@
+.project-overview-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.project-item {
+  position: relative;
+  overflow: hidden;
+  margin: 'var(--base-unit)' calc(var(--gutter-width) / 2);
+  flex-basis: calc(33.33% - var(--gutter-width));
+}
+
+.project-image-container {
+  width: 100%;
+  height: auto;
+}
+
+.project-title {
+  font-size: 'var(--clamp-md-min)';
+  line-height: 'var(--line-height-md)';
+  color: 'var(--primary-light)';
+  margin-top: calc(var(--base-unit) * 2);
+}
+
+.project-description {
+  font-size: 'var(--clamp-sm-min)';
+  line-height: 'var(--line-height-sm)';
+  color: 'var(--muted-light)';
+  margin-top: 'var(--base-unit)';
+}

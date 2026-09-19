@@ -1,0 +1,444 @@
+ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ  FORGE REGRESSION TEST SUITE                  Γòæ
+Γòæ  Provider: Groq (hardcoded for speed)         Γòæ
+Γòæ  Timeout: 10 minutes per fixture              Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  REGRESSION TEST: SIMPLE
+  Prompt: {
+  "name": "Simple Portfolio",
+  "description": "A minimal portfolio landing pa...
+  Output: C:\Forge\regression-output\simple-portfolio
+  Timeout: 60 minutes
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[PIPELINE] [stage:start] Pre-flight check: verifying Ollama at http://localhost:11434...
+[PIPELINE] [stage:start] Ollama connectivity OK. Model "qwen2.5-coder:7b" available.
+[PIPELINE] [pipeline:start] Starting Forge pipeline for: "{
+  "name": "Simple Portfolio",
+  "description": "A minimal portfolio landing pa..."
+[PIPELINE] [stage:start] Starting intake...
+[PIPELINE] [stage:complete] intake complete (8.7s)
+[PIPELINE] [stage:start] Starting architect...
+[PIPELINE] [stage:complete] architect complete (6.9s)
+[PIPELINE] [stage:start] Starting design-brain...
+[PIPELINE] [stage:complete] design-brain complete (21.8s)
+[PIPELINE] [stage:start] Starting motion-brain...
+[PIPELINE] [stage:complete] motion-brain complete (16.3s)
+[PIPELINE] [stage:start] Starting codegen...
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 25 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:start] Codegen pass 1/2: 25 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating config batch (package.json, tailwind.config.ts, postcss.config.js)...
+[PIPELINE] [codegen:file:success] Generated (batch): package.json
+[PIPELINE] [codegen:file:success] Generated (batch): tailwind.config.ts
+[PIPELINE] [codegen:file:success] Generated (batch): postcss.config.js
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [stage:start] Generating app/globals.css...
+[PIPELINE] [codegen:file:success] Generated: app/globals.css
+[PIPELINE] [stage:complete] Generated app/globals.css
+[PIPELINE] [stage:start] Generating lib/gsap-config.ts...
+[PIPELINE] [codegen:file:success] Generated: lib/gsap-config.ts
+[PIPELINE] [stage:complete] Generated lib/gsap-config.ts
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [stage:start] Generating hooks/useReducedMotion.ts...
+[PIPELINE] [codegen:file:success] Generated: hooks/useReducedMotion.ts
+[PIPELINE] [stage:complete] Generated hooks/useReducedMotion.ts
+[PIPELINE] [stage:start] Generating next.config.js...
+[PIPELINE] [codegen:file:success] Generated: next.config.js
+[PIPELINE] [stage:complete] Generated next.config.js
+[PIPELINE] [stage:start] Generating tsconfig.json...
+[PIPELINE] [codegen:file:success] Generated: tsconfig.json
+[PIPELINE] [stage:complete] Generated tsconfig.json
+[PIPELINE] [stage:start] Generating components/Navbar.module.css...
+[PIPELINE] [codegen:file:success] Generated: components/Navbar.module.css
+[PIPELINE] [stage:complete] Generated components/Navbar.module.css
+[PIPELINE] [stage:start] Generating app/page.module.css...
+[PIPELINE] [codegen:file:success] Generated: app/page.module.css
+[PIPELINE] [stage:complete] Generated app/page.module.css
+[PIPELINE] [stage:start] Generating app/contact/page.module.css...
+[PIPELINE] [codegen:file:success] Generated: app/contact/page.module.css
+[PIPELINE] [stage:complete] Generated app/contact/page.module.css
+[PIPELINE] [stage:start] Generating app/about/page.module.css...
+[PIPELINE] [codegen:file:success] Generated: app/about/page.module.css
+[PIPELINE] [stage:complete] Generated app/about/page.module.css
+[PIPELINE] [stage:start] Generating components/Hero.module.css...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.module.css
+[PIPELINE] [stage:complete] Generated components/Hero.module.css
+[PIPELINE] [stage:start] Generating components/ContactForm.module.css...
+[PIPELINE] [codegen:file:success] Generated: components/ContactForm.module.css
+[PIPELINE] [stage:complete] Generated components/ContactForm.module.css
+[PIPELINE] [stage:start] Generating components/BioSection.module.css...
+[PIPELINE] [codegen:file:success] Generated: components/BioSection.module.css
+[PIPELINE] [stage:complete] Generated components/BioSection.module.css
+[PIPELINE] [stage:start] Generating hooks/useLenis.ts...
+[PIPELINE] [codegen:file:success] Generated: hooks/useLenis.ts
+[PIPELINE] [stage:complete] Generated hooks/useLenis.ts
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [stage:start] Generating components/ContactForm.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/ContactForm.tsx
+[PIPELINE] [stage:complete] Generated components/ContactForm.tsx
+[PIPELINE] [stage:start] Generating components/BioSection.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/BioSection.tsx
+[PIPELINE] [stage:complete] Generated components/BioSection.tsx
+[PIPELINE] [stage:start] Generating components/Navbar.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Navbar.tsx
+[PIPELINE] [stage:complete] Generated components/Navbar.tsx
+[PIPELINE] [stage:start] Generating app/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/page.tsx
+[PIPELINE] [stage:complete] Generated app/page.tsx
+[PIPELINE] [stage:start] Generating app/contact/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/contact/page.tsx
+[PIPELINE] [stage:complete] Generated app/contact/page.tsx
+[PIPELINE] [stage:start] Generating app/about/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/about/page.tsx
+[PIPELINE] [stage:complete] Generated app/about/page.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 25 succeeded, 0 failed, 0 blocked, 0 skipped (253.5s)
+[PIPELINE] [stage:complete] Codegen complete: 25/25 succeeded on pass 1
+[PIPELINE] [stage:complete] codegen complete (253.5s)
+[PIPELINE] [qa:check] QA Gate: Checking 3 page(s) (attempt 1/4)
+{
+  "pagesToCheck": 3
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [fast] for /: FAILED (10 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 10,
+  "mode": "fast"
+}
+[PIPELINE] [qa:check] QA Gate [fast] for /contact: FAILED (8 fix tickets)
+{
+  "page": "/contact",
+  "passed": false,
+  "tickets": 8,
+  "mode": "fast"
+}
+[PIPELINE] [qa:check] QA Gate [fast] for /about: FAILED (8 fix tickets)
+{
+  "page": "/about",
+  "passed": false,
+  "tickets": 8,
+  "mode": "fast"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:retry] QA failed for 3 page(s) ΓÇö regenerating failed pages (attempt 2/4)
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 25 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:complete] Checkpoint resume: 18/25 files already generated, skipping
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/globals.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): lib/gsap-config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useReducedMotion.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useLenis.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): package.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): next.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tsconfig.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tailwind.config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): postcss.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Navbar.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/contact/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/contact/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/about/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Hero.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/ContactForm.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/BioSection.module.css
+[PIPELINE] [stage:start] Codegen pass 1/2: 7 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [stage:start] Generating components/ContactForm.tsx...
+[PIPELINE] [stage:start] Generating components/BioSection.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/ContactForm.tsx
+[PIPELINE] [stage:complete] Generated components/ContactForm.tsx
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [codegen:file:success] Generated: components/BioSection.tsx
+[PIPELINE] [stage:complete] Generated components/BioSection.tsx
+[PIPELINE] [stage:start] Generating components/Navbar.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Navbar.tsx
+[PIPELINE] [stage:complete] Generated components/Navbar.tsx
+[PIPELINE] [stage:start] Generating app/about/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/about/page.tsx
+[PIPELINE] [stage:complete] Generated app/about/page.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 7 succeeded, 0 failed, 0 blocked, 0 skipped (76.1s)
+[PIPELINE] [stage:complete] Codegen complete: 25/25 succeeded on pass 1
+[PIPELINE] [qa:check] QA Gate: Checking 3 page(s) (attempt 2/4)
+{
+  "pagesToCheck": 3
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [fast] for /: FAILED (9 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 9,
+  "mode": "fast"
+}
+[PIPELINE] [qa:check] QA Gate [fast] for /contact: FAILED (8 fix tickets)
+{
+  "page": "/contact",
+  "passed": false,
+  "tickets": 8,
+  "mode": "fast"
+}
+[PIPELINE] [qa:check] QA Gate [fast] for /about: FAILED (8 fix tickets)
+{
+  "page": "/about",
+  "passed": false,
+  "tickets": 8,
+  "mode": "fast"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:retry] QA failed for 3 page(s) ΓÇö regenerating failed pages (attempt 3/4)
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 25 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:complete] Checkpoint resume: 19/25 files already generated, skipping
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/globals.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): lib/gsap-config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useReducedMotion.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useLenis.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): package.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): next.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tsconfig.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tailwind.config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): postcss.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Navbar.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/contact/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/contact/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/about/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/about/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Hero.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/ContactForm.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/BioSection.module.css
+[PIPELINE] [stage:start] Codegen pass 1/2: 6 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [stage:start] Generating components/ContactForm.tsx...
+[PIPELINE] [stage:start] Generating components/BioSection.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [codegen:file:success] Generated: components/ContactForm.tsx
+[PIPELINE] [stage:complete] Generated components/ContactForm.tsx
+[PIPELINE] [codegen:file:success] Generated: components/BioSection.tsx
+[PIPELINE] [stage:complete] Generated components/BioSection.tsx
+[PIPELINE] [stage:start] Generating components/Navbar.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Navbar.tsx
+[PIPELINE] [stage:complete] Generated components/Navbar.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 6 succeeded, 0 failed, 0 blocked, 0 skipped (92.6s)
+[PIPELINE] [stage:complete] Codegen complete: 25/25 succeeded on pass 1
+[PIPELINE] [qa:check] QA Gate: Checking 3 page(s) (attempt 3/4)
+{
+  "pagesToCheck": 3
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [fast] for /: FAILED (9 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 9,
+  "mode": "fast"
+}
+[PIPELINE] [qa:check] QA Gate [fast] for /contact: FAILED (7 fix tickets)
+{
+  "page": "/contact",
+  "passed": false,
+  "tickets": 7,
+  "mode": "fast"
+}
+[PIPELINE] [qa:check] QA Gate [fast] for /about: FAILED (7 fix tickets)
+{
+  "page": "/about",
+  "passed": false,
+  "tickets": 7,
+  "mode": "fast"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:retry] QA failed for 3 page(s) ΓÇö regenerating failed pages (attempt 4/4)
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 25 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:complete] Checkpoint resume: 19/25 files already generated, skipping
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/globals.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): lib/gsap-config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useReducedMotion.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useLenis.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): package.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): next.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tsconfig.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tailwind.config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): postcss.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Navbar.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/contact/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/contact/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/about/page.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/about/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Hero.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/ContactForm.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/BioSection.module.css
+[PIPELINE] [stage:start] Codegen pass 1/2: 6 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [stage:start] Generating components/ContactForm.tsx...
+[PIPELINE] [stage:start] Generating components/BioSection.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/ContactForm.tsx
+[PIPELINE] [stage:complete] Generated components/ContactForm.tsx
+[PIPELINE] [codegen:file:success] Generated: components/BioSection.tsx
+[PIPELINE] [stage:complete] Generated components/BioSection.tsx
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [stage:start] Generating components/Navbar.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Navbar.tsx
+[PIPELINE] [stage:complete] Generated components/Navbar.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 6 succeeded, 0 failed, 0 blocked, 0 skipped (76.4s)
+[PIPELINE] [stage:complete] Codegen complete: 25/25 succeeded on pass 1
+[PIPELINE] [qa:check] QA Gate: Checking 3 page(s) (attempt 4/4)
+{
+  "pagesToCheck": 3
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [full] for /: FAILED (12 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 12,
+  "mode": "full"
+}
+[PIPELINE] [qa:check] QA Gate [full] for /contact: FAILED (9 fix tickets)
+{
+  "page": "/contact",
+  "passed": false,
+  "tickets": 9,
+  "mode": "full"
+}
+[PIPELINE] [qa:check] QA Gate [full] for /about: FAILED (8 fix tickets)
+{
+  "page": "/about",
+  "passed": false,
+  "tickets": 8,
+  "mode": "full"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:start] Starting sitemap-verification...
+[PIPELINE] [stage:complete] Sitemap verification passed: all required files present
+[PIPELINE] [stage:complete] sitemap-verification complete (0.0s)
+[PIPELINE] [stage:start] Starting build...
+[PIPELINE] [stage:start] Running next build...
+[PIPELINE] [stage:start] Unloading 1 Ollama model(s) to free memory for build...
+[PIPELINE] [stage:start] Installing dependencies...
+(node:31096) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[PIPELINE] [stage:start] npm version: 11.6.2
+[PIPELINE] [stage:start] Running next build...
+file:///C:/Forge/core/dist/orchestrator/pipeline.js:716
+                        reject(new Error(`next build failed with exit code ${code}:\n${output}`));
+                               ^
+
+Error: next build failed with exit code 1:
+  Γû▓ Next.js 15.0.0
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./app/page.tsx
+Error:   x the name `ContactForm` is defined multiple times
+    ,-[C:\Forge\regression-output\simple-portfolio\app\page.tsx:2:1]
+  1 | 'use client';
+  2 | import ContactForm from '../components/ContactForm';
+    :        ^^^^^|^^^^^
+    :             `-- previous definition of `ContactForm` here
+  3 | import BioSection from '../components/BioSection';
+  4 | import Hero from '../components/Hero';
+  5 | import Navbar from '../components/Navbar';
+  6 | import LenisProvider from '../lib/lenis-provider'
+  7 | 
+  8 | 
+  9 | 
+ 10 | const ContactForm = () => {
+    :       ^^^^^|^^^^^
+    :            `-- `ContactForm` redefined here
+ 11 |   return (
+ 12 |     <section id='contactForm' className='contact-form-section'>
+ 13 |       <h2>Contact Me</h2>
+    `----
+  x the name `BioSection` is defined multiple times
+    ,-[C:\Forge\regression-output\simple-portfolio\app\page.tsx:3:1]
+  1 | 'use client';
+  2 | import ContactForm from '../components/ContactForm';
+  3 | import BioSection from '../components/BioSection';
+    :        ^^^^^|^^^^
+    :             `-- previous definition of `BioSection` here
+  4 | import Hero from '../components/Hero';
+  5 | import Navbar from '../components/Navbar';
+  6 | import LenisProvider from '../lib/lenis-provider'
+  7 | 
+  8 | 
+  9 | 
+ 10 | const ContactForm = () => {
+ 11 |   return (
+ 12 |     <section id='contactForm' className='contact-form-section'>
+ 13 |       <h2>Contact Me</h2>
+ 14 |       <form action='#'>
+ 15 |         <input type='text' placeholder='Name' />
+ 16 |         <input type='email' placeholder='Email' />
+ 17 |         <textarea rows={4} placeholder='Message'></textarea>
+ 18 |         <button type='submit'>Send Message</button>
+ 19 |       </form>
+ 20 |     </section>
+ 21 |   )
+ 22 | }
+ 23 | 
+ 24 | const BioSection = () => {
+    :       ^^^^^|^^^^
+    :            `-- `BioSection` redefined here
+ 25 |   return (
+ 26 |     <div id='bioSection' className='bio-section'>
+ 27 |       <h2>About Me</h2>
+    `----
+
+Import trace for requested module:
+./app/page.tsx
+
+
+> Build failed because of webpack errors
+
+    at ChildProcess.<anonymous> (file:///C:/Forge/core/dist/orchestrator/pipeline.js:716:32)
+    at ChildProcess.emit (node:events:508:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
+
+Node.js v24.11.1

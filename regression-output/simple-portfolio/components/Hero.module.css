@@ -1,0 +1,20 @@
+.hero-section {
+  background-color: 'var(--surface-light)';
+  color: 'var(--on-surface-dark)';
+  padding: calc(var(--base-unit) * 2) calc(var(--gutter-width));
+}
+
+.hero-title {
+  font-family: 'var(--font-display-family)';
+  font-size: 'var(--clamp-md-min)';
+  line-height: 'var(--line-height-md)';
+  letter-spacing: -0.02em;
+  margin-bottom: calc(var(--base-unit) * 1);
+}
+
+.hero-subtitle {
+  font-family: 'var(--font-text-family)';
+  font-size: 'var(--clamp-sm-min)';
+  line-height: 'var(--line-height-sm)';
+  color: 'var(--muted-dark)';
+}

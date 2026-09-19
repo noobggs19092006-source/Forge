@@ -1,0 +1,35 @@
+.stats-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 'var(--clamp-lg)';
+}
+
+.stats-container {
+  max-width: calc(var(--max-width) - (var(--gutter-width) * 2));
+  width: 100%;
+  padding: 0 var(--gutter-width);
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  margin-right: 'var(--md)';
+}
+
+.stat-label {
+  font-size: 'var(--clamp-md-min)';
+  color: 'var(--on-surface-light)';
+}
+
+.stat-value {
+  font-family: 'Inter', sans-serif;
+  font-size: calc(var(--clamp-lg) * 2.5); /* Hardcoded for visual impact */
+  letter-spacing: -0.04em; /* Hardcoded value from design tokens */
+  color: 'var(--accent-light)';
+}
+
+.stat-value::after {
+  content: "/100";
+  margin-left: 'var(--xs)';
+}
