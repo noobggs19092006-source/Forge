@@ -1,3 +1,4 @@
+'use client';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -5,7 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 const defaultEasing = "power3.out";
 const defaultDuration = 0.6;
-staggerInterval: number | undefined;
+staggerInterval: number;
 export const gsapConfig = {
   defaultEasing,
   defaultDuration,

@@ -1,7 +1,7 @@
 'use client';
 import Lenis from 'lenis';
 import gsap from 'gsap';
-import { createContext, useContext, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 export const LenisContext = createContext<Lenis | null>(null);
 
 interface LenisProviderProps {
@@ -22,17 +22,28 @@ const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
 
       setLenis(lenisNewInstance);
 
-      function raf(time: number) {
-        if (lenis && lenis.raf) lenis.raf(time); // <-- closing } for the arrow-function body, then ) for lenis.raf(, then ;
-        window.requestAnimationFrame(raf);
-      }
-
-      window.requestAnimationFrame(raf);
+      return () => {
+        lenisNewInstance.destroy();
+      };
     }
   }, []);
 
+  useEffect(() => {
+    if (lenis) {
+      const scrollHandler = ({ scroll }) => {
+        // handler body
+      };
+
+      lenis.on('scroll', scrollHandler);
+
+      return () => {
+        lenis.off('scroll', scrollHandler);
+      };
+    }
+  }, [lenis]);
+
   return (
-    <LenisContext.Provider value={lenis || null}>
+    <LenisContext.Provider value={lenis}>
       <div style={{ height: '100vh', overflowY: 'auto' }}>{children}</div>
     </LenisContext.Provider>
   );

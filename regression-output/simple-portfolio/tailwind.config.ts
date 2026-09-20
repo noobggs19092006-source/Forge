@@ -29,14 +29,39 @@ const config: Config = {
         sm: '--sm',
         md: '--md',
         lg: '--lg',
-        xl: '--xl'
+        xl: '--xl',
+        '2xl': '--2xl'
       },
-      fontFamily: {
-        display: 'var(--font-display-family)',
-        text: 'var(--font-text-family)'
+      typography: {
+        fontFamily: {
+          display: 'var(--font-display-family)',
+          text: 'var(--font-text-family)'
+        }
+      },
+      extend: {
+        fontSize: {
+          xs: 'var(--clamp-xs)',
+          sm: 'var(--clamp-sm)',
+          base: 'var(--clamp-base)',
+          lg: 'var(--clamp-lg)',
+          xl: 'var(--clamp-xl)'
+        },
+        lineHeight: {
+          xs: 'var(--line-height-xs)',
+          sm: 'var(--line-height-sm)',
+          base: 'var(--line-height-base)',
+          lg: 'var(--line-height-lg)',
+          xl: 'var(--line-height-xl)'
+        }
+      },
+      extend: {
+        animation: {
+          'clip-path-circle': 'clipPathCircle 0.6s ease-out forwards'
+        }
       }
     }
   },
+  variants: {},
   plugins: []
 };
 

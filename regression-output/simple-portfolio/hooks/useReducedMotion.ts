@@ -10,9 +10,7 @@ const useReducedMotion = () => {
     handleChange(); // Initial check
     mediaQuery.addEventListener('change', handleChange);
 
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   return reducedMotion;

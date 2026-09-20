@@ -412,7 +412,8 @@ Requirements for this specific file:
     - INCORRECT: <div className={styles.hero-section} />
     - CORRECT:   <div className={styles['hero-section']} />
 - Include all necessary imports
-- Use the shared LenisProvider and GSAP config from lib/lenis-provider.tsx and lib/gsap-config.ts
+- EXACT import for LenisProvider: import LenisProvider from '${relPathToLib}/lenis-provider'
+- EXACT import for GSAP config: import { gsapConfig } from '${relPathToLib}/gsap-config'
 - For section components: implement the exact choreography from the motion plan for that section ID
 
 ${fileSpec.path === 'package.json' ? `
@@ -465,7 +466,7 @@ SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
 - TYPE the children prop: children: React.ReactNode (NOT implicit any)
   - DO NOT import any non-existent hooks or utilities like 'use-client-effect'. Only import what is strictly required.
   - MUST export default function RootLayout({ children }: { children: React.ReactNode })
-  - MUST use default import: import LenisProvider from '../lib/lenis-provider' (DO NOT use named import)
+  - MUST use default import: import LenisProvider from '${relPathToLib}/lenis-provider' (DO NOT use named import)
 - DO NOT use CSS Modules in layout.tsx (there is no layout.module.css). Use plain className="..." strings or global CSS variables via var(--token-name) directly in className.
 ` : ''}
 
@@ -571,8 +572,8 @@ SPECIFIC PAGE.MODULE.CSS REQUIREMENTS (for all pages under app/):
 ${fileSpec.path === 'components/Contact.tsx' ? `
 SPECIFIC CONTACT.TSX REQUIREMENTS:
 - MUST start with 'use client;' as a STRING LITERAL at the very top
-- Import globals.css as: import '../app/globals.css'
-- Import LenisProvider from '../lib/lenis-provider'
+- Import globals.css as: import '${upToRoot}app/globals.css'
+- Import LenisProvider from '${relPathToLib}/lenis-provider'
 - Use CSS Modules: import styles from './Contact.module.css' (DO NOT include the CSS content in this file, ONLY write the TSX code)
 - Do NOT use styled-jsx or <style jsx> - use CSS Modules instead
   - IMPORTANT: NEVER use dot notation for kebab-case CSS classes (e.g., styles.contact-form is INVALID). Always use bracket notation for kebab-case class names: styles['contact-form']
@@ -598,21 +599,21 @@ The file MUST begin with EXACTLY this pattern (copy it verbatim):
 
 'use client';
 import styles from './Hero.module.css';
-import '../app/globals.css';
-import { useLenis } from '../hooks/useLenis';
-import useReducedMotion from '../hooks/useReducedMotion';
+import '${upToRoot}app/globals.css';
+import { useLenis } from '${relPathToHooks}/useLenis';
+import useReducedMotion from '${relPathToHooks}/useReducedMotion';
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { gsapConfig } from '../lib/gsap-config';
+import { gsapConfig } from '${relPathToLib}/gsap-config';
 
 CRITICAL RULES:
 - 'use client'; is a STRING on line 1 — NOT a comment (// use client is WRONG)
 - import styles from './Hero.module.css' MUST be present (line 2)
 - Use className={styles.heroContainer}, className={styles.heroTitle} etc. — NOT className="heroContainer"
-- useReducedMotion is a DEFAULT import (no curly braces): import useReducedMotion from '../hooks/useReducedMotion'
+- useReducedMotion is a DEFAULT import (no curly braces): import useReducedMotion from '${relPathToHooks}/useReducedMotion'
 - useReducedMotion RETURNS A BOOLEAN, NOT AN ARRAY: const prefersReducedMotion = useReducedMotion(); (NOT const [isReducedMotion] = useReducedMotion())
-- useLenis is a NAMED import (with curly braces): import { useLenis } from '../hooks/useLenis'
+- useLenis is a NAMED import (with curly braces): import { useLenis } from '${relPathToHooks}/useLenis'
 - Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values
 - Export default Hero component at the bottom
 ` : ''}
@@ -723,11 +724,11 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
            '- Use CSS Modules for all component-scoped styling: import styles from \'./' +
            fileSpec.path.replace('components/', '').replace('.tsx', '') + '.module.css\'\n' +
            '- Do NOT use inline styles, styled-jsx, or <style jsx> tags\n' +
-             '- IMPORTANT: For all imports from lib or hooks directories, use ONE level up relative path (e.g. \'../lib/lenis-provider\' or \'../hooks/useReducedMotion\' or \'../lib/gsap-config\'). Do NOT use \'../../\'.\n' +
+             '- IMPORTANT: For all imports from lib or hooks directories, use the EXACT relative path (do NOT use hardcoded ../ or ../../).\n' +
              '- IMPORT ScrollTrigger CORRECTLY: import { ScrollTrigger } from \'gsap/ScrollTrigger\';\n' +
-             '- IMPORT useReducedMotion CORRECTLY: import useReducedMotion from \'../hooks/useReducedMotion\'; (It is a DEFAULT export, do NOT use curly braces)\n' +
-             '- IMPORT useLenis CORRECTLY: import { useLenis } from \'../hooks/useLenis\'; (It is a NAMED export, do NOT import it from lenis-provider)\n' +
-             '- IMPORT gsapConfig CORRECTLY: import { gsapConfig } from \'../lib/gsap-config\'; (Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values)\n' +
+             `- IMPORT useReducedMotion CORRECTLY: import useReducedMotion from '${relPathToHooks}/useReducedMotion'; (It is a DEFAULT export, do NOT use curly braces)\n` +
+             `- IMPORT useLenis CORRECTLY: import { useLenis } from '${relPathToHooks}/useLenis'; (It is a NAMED export, do NOT import it from lenis-provider)\n` +
+             `- IMPORT gsapConfig CORRECTLY: import { gsapConfig } from '${relPathToLib}/gsap-config'; (Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values)\n` +
              '- ALWAYS include ALL imports used in the file! If you use lenis, you MUST import it!\n' +
              '- For React hooks (useEffect, useRef, useState), ALWAYS import them explicitly: import React, { useEffect, useRef, useState } from \'react\';\n' +
 
@@ -751,7 +752,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
            '- Use CSS Modules for all component-scoped styling: import styles from \'./' +
            fileSpec.path.replace('components/', '').replace('.tsx', '') + '.module.css\'\n' +
            '- Do NOT use inline styles, styled-jsx, or <style jsx> tags\n' +
-             '- IMPORTANT: For all imports from lib or hooks directories, use ONE level up relative path (e.g. \'../lib/lenis-provider\' or \'../hooks/useReducedMotion\' or \'../lib/gsap-config\'). Do NOT use \'../../\'.\n' +
+             '- IMPORTANT: For all imports from lib or hooks directories, use the EXACT relative path (do NOT use hardcoded ../ or ../../).\n' +
              '- ALWAYS include ALL imports used in the file!\n' +
              '- For React hooks (useEffect, useRef, useState), ALWAYS import them explicitly: import React, { useEffect, useRef, useState } from \'react\';\n' +
            '- DO NOT import lenisInstance or any named export from lenis-provider other than LenisContext. lenis-provider only exports LenisContext (named) and LenisProvider (default).\n' +
@@ -1220,26 +1221,25 @@ export default function ${safeName}() {
            }
         }
 
-if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.+\/page\.tsx$/)) {
-        // ── Import-depth normalizer backstop ──────────────────────────────────────────────────
-        // The model sometimes uses the wrong number of '../' segments for deeply nested pages.
+        // ── Import-depth normalizer backstop (ALL FILES) ──────────────────────────────────────
+        // The model sometimes uses the wrong number of '../' segments.
         // relPathToLib/Components/Hooks are computed from actual file depth at prompt time.
-        // Here we post-process to fix any surviving wrong-depth imports.
-        if (fileDepth > 1) {
-          // Replace any variant of '../(1-9 times)lib/' with the correct relPath
-          content = content.replace(
-            /from\s+['"](?:\.\.\/)+lib\/(lenis-provider|gsap-config)['"]/g,
-            (_, mod) => `from '${relPathToLib}/${mod}'`
-          );
-          content = content.replace(
-            /from\s+['"](?:\.\.\/)+components\/([A-Za-z0-9_-]+)['"]/g,
-            (_, comp) => `from '${relPathToComponents}/${comp}'`
-          );
-          content = content.replace(
-            /from\s+['"](?:\.\.\/)+hooks\/([A-Za-z0-9_-]+)['"]/g,
-            (_, hook) => `from '${relPathToHooks}/${hook}'`
-          );
-        }
+        // Here we post-process to fix any surviving wrong-depth imports in any file.
+        // Replace any variant of '../(1-9 times)lib/' with the correct relPath
+        content = content.replace(
+          /from\s+['"](?:\.\.\/)+lib\/(lenis-provider|gsap-config)['"]/g,
+          (_, mod) => `from '${relPathToLib}/${mod}'`
+        );
+        content = content.replace(
+          /from\s+['"](?:\.\.\/)+components\/([A-Za-z0-9_-]+)['"]/g,
+          (_, comp) => `from '${relPathToComponents}/${comp}'`
+        );
+        content = content.replace(
+          /from\s+['"](?:\.\.\/)+hooks\/([A-Za-z0-9_-]+)['"]/g,
+          (_, hook) => `from '${relPathToHooks}/${hook}'`
+        );
+
+if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.+\/page\.tsx$/)) {
 
         // Remove hallucinated styles object usage since page.tsx has no CSS module.
         // Use fragment-level replacement (not whole-expression) so it catches styles['x'] inside

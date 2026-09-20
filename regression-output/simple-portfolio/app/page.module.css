@@ -1,49 +1,25 @@
 .hero-section {
-  clip-path: circle(0% at center);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - var(--gutter-width));
 }
-.hero-section[data-scroll-trigger] {
-  animation-name: heroClipPath;
-  animation-duration: 'var(--default-duration)';
-  animation-timing-function: 'var(--default-easing)';
+
+.hero-text-container {
+  text-align: center;
 }
-@keyframes heroClipPath {
-  from { clip-path: circle(0% at center); }
-  to { clip-path: circle(100% at center); }
+
+.hero-title {
+  font-family: 'var(--font-display-family)';
+  font-size: 'var(--clamp-lg-min)';
+  line-height: 'var(--line-height-lg)';
+  color: 'var(--primary-light)';
 }
-.cta-section {
-  opacity: 0;
-  transform: translateY(var(--lg));
-}
-.cta-section[data-scroll-trigger] {
-  animation-name: ctaFadeIn;
-  animation-duration: 'var(--default-duration)';
-  animation-timing-function: 'var(--default-easing)';
-}
-@keyframes ctaFadeIn {
-  from { opacity: 0; transform: translateY(var(--lg)); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.project-overview-section .project-item {
-  opacity: 0;
-  transform: translateX(-2rem);
-}
-.project-overview-section[data-scroll-trigger] .project-item:nth-child(n) {
-  animation-delay: calc(var(--stagger-interval) * (n - 1));
-  animation-name: projectItemSlideIn;
-  animation-duration: 'var(--default-duration)';
-  animation-timing-function: 'var(--default-easing)';
-}
-@keyframes projectItemSlideIn {
-  from { opacity: 0; transform: translateX(-2rem); }
-  to { opacity: 1; transform: translateX(0); }
-}
-.stats-section .stat-number {
-  counter-reset: count;
-  animation-name: statCountUp;
-  animation-duration: 'var(--default-duration)';
-  animation-timing-function: linear;
-}
-@keyframes statCountUp {
-  from { content: '0'; }
-  to { content: counter(count); }
+
+.hero-subtitle {
+  margin-top: 'var(--gutter-width)';
+  font-family: 'var(--font-text-family)';
+  font-size: 'var(--clamp-md-min)';
+  line-height: 'var(--line-height-md)';
+  color: 'var(--on-surface-dark)';
 }

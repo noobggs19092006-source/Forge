@@ -1,0 +1,13 @@
+.footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-top: 'var(--lg)';
+  padding-bottom: 'var(--md)';
+}
+
+.footer-text {
+  font-size: 'var(--clamp-md-min)';
+  line-height: 'var(--line-height-md)';
+  color: 'var(--on-surface-light)';
+}

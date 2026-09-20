@@ -218,6 +218,10 @@ async function main() {
   
   config.codegenMaxConcurrency = 1; config.codegenInterRequestDelayMs = 0;
   
+  // On Windows, Node.js resolves 'localhost' to ::1 (IPv6) while Ollama binds 127.0.0.1 (IPv4).
+  // Explicitly use 127.0.0.1 to avoid fetch failures.
+  if (!config.routing.ollama) config.routing.ollama = {};
+  config.routing.ollama.baseUrl = 'http://127.0.0.1:11434';
   
   
   
