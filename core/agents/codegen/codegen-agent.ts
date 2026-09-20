@@ -368,6 +368,33 @@ if (depContent) {
       }
     }
 
+    // ── Computed import paths (exact, based on actual file depth) ─────────────────────────────
+    // Count directory segments so we can derive the correct relative path regardless of nesting.
+    // e.g. 'app/page.tsx' → depth 1 → '../'
+    //      'app/about/[slug]/page.tsx' → depth 3 → '../../../'
+    const fileDirParts = fileSpec.path.split('/').slice(0, -1);
+    const fileDepth = fileDirParts.length;
+    const upToRoot = fileDepth === 0 ? './' : Array(fileDepth).fill('..').join('/') + '/';
+    const relPathToLib        = `${upToRoot}lib`;
+    const relPathToComponents = `${upToRoot}components`;
+    const relPathToHooks      = `${upToRoot}hooks`;
+
+    // ── Real available component names (from what's already been planned/generated) ──────────
+    // Eliminates hallucinated names like "CtaSection" when the real file is "Cta.tsx".
+    const availableComponentNames: string[] = [];
+    for (const [genPath] of alreadyGenerated) {
+      if (genPath.startsWith('components/') && genPath.endsWith('.tsx')) {
+        const name = genPath.replace('components/', '').replace('.tsx', '');
+        availableComponentNames.push(name);
+      }
+    }
+    for (const depPath of fileSpec.dependencies) {
+      if (depPath.startsWith('components/') && depPath.endsWith('.tsx')) {
+        const name = depPath.replace('components/', '').replace('.tsx', '');
+        if (!availableComponentNames.includes(name)) availableComponentNames.push(name);
+      }
+    }
+
     const singleFilePrompt = this.formatInput(input) + dependencyContext + `
 
 ## TASK: Generate Single File
@@ -444,35 +471,40 @@ SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
 
 ${fileSpec.path === 'app/page.tsx' ? `
 SPECIFIC APP/PAGE.TSX REQUIREMENTS:
-- MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line). Example:
-  'use client'
-  import LenisProvider from '../lib/lenis-provider'
-  NOT:
-  use client
-  import LenisProvider from '../lib/lenis-provider'
-- Import LenisProvider from '../lib/lenis-provider' (relative path from app/ to lib/, NOT '@/lib/lenis-provider')
-- Import section components from '../components/ComponentName' (NOT ./sections/... - the component files are in components/ folder)
-- ONLY import and render section components that EXIST in the sitemap sections array (use the exact 'componentName' field provided below for the import path and component tag) - check the sitemap sections array and ONLY import those components
+- MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line).
+- This file lives at: ${fileSpec.path}
+- EXACT import for LenisProvider (copy verbatim): import LenisProvider from '${relPathToLib}/lenis-provider'
+- EXACT import path prefix for components (copy verbatim): import Hero from '${relPathToComponents}/Hero'
+- DO NOT use '../lib', '@/lib', or any other path variant — use ONLY the exact path shown above.
+${availableComponentNames.length > 0 ? `- AVAILABLE COMPONENTS (only import from this list — never invent a name not on it):
+${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}/${n}'`).join('\n')}` : ''}
+- ONLY import and render section components that EXIST in the sitemap sections array (use the exact 'componentName' field)
 - For the current sitemap, the sections are: ${JSON.stringify(input.sitemap.pages.flatMap(p => p.sections.map(s => ({ id: s.id, contentType: s.contentType, componentName: s.id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('') }))), null, 2)}
 - DO NOT import Footer in page.tsx - Footer is rendered via layout.tsx
-- DO NOT import components that don't exist (e.g., About, Portfolio, Contact) unless they are in the sitemap sections above
 - Use proper semantic HTML structure
-- CRITICAL: page.tsx is a LEAF COMPONENT — it does NOT receive or render a 'children' prop. Only layout.tsx receives {children}. DO NOT write {children} anywhere in page.tsx. Render the actual section components (e.g. <Hero />) directly in your JSX instead.
-- CRITICAL: This file does NOT import a CSS module and must NEVER reference \`styles\` in any form — not styles.x, not styles['x'], not in a concatenation like styles['x'] + ' foo', not in a template literal. Use plain string className values only, e.g. className="my-section" not className={styles['my-section']}.
-- CRITICAL: Every section component (Hero, ContactForm, BioSection, etc.) MUST be imported from its own file in components/ and used as <ComponentName />. NEVER write a local implementation of a component in page.tsx if you have already imported it under the same name — that causes a duplicate-identifier error. page.tsx should contain ONLY import statements and a single top-level page component that composes the imported section components.
+- CRITICAL: page.tsx is a LEAF COMPONENT — it does NOT receive or render a 'children' prop. DO NOT write {children} here.
+- CRITICAL: This file does NOT import a CSS module. NEVER reference \`styles\` in any form. Use plain string className values.
+- CRITICAL: NEVER write a local implementation (const X = () => ...) of any component you have already imported — duplicate-identifier error.
 ` : ''}
 
-${fileSpec.path.match(/^app\/.*\/page\.tsx$/) ? `
-SPECIFIC PAGE.TSX REQUIREMENTS (for all pages under app/):
+${fileSpec.path.match(/^app\/.+\/page\.tsx$/) ? `
+SPECIFIC PAGE.TSX REQUIREMENTS (for nested pages under app/):
 - MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line)
-- Import LenisProvider from '../../lib/lenis-provider' (relative path from app/*/ to lib/)
-- Import section components from '../../components/ComponentName' (relative path)
+- This file lives at: ${fileSpec.path}
+- EXACT import for LenisProvider (copy verbatim, do not alter the path): import LenisProvider from '${relPathToLib}/lenis-provider'
+- EXACT import path prefix for components (copy verbatim): import ComponentName from '${relPathToComponents}/ComponentName'
+- EXACT import path prefix for hooks (copy verbatim): import { useLenis } from '${relPathToHooks}/useLenis'
+- DO NOT use '../../lib', '../lib', '@/lib', or any other path — use ONLY the exact paths shown above for this file.
+${availableComponentNames.length > 0 ? `- AVAILABLE COMPONENTS (you may ONLY import from this exact list — never invent a name not on it):
+${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}/${n}'`).join('\n')}` : ''}
 - ONLY import and render section components that EXIST in the sitemap sections array for THIS page
-- Import styles from './page.module.css' (the CSS module is in the SAME directory)
+- Import styles from './page.module.css' (the CSS module is in the SAME directory as this file)
 - Use className={styles['class-name']} for all styled elements (bracket notation for kebab-case)
 - Use proper semantic HTML structure: <main> wrapper, sections with IDs
 - DO NOT import Footer - Footer is rendered via layout.tsx
 - DO NOT include <script> tags in JSX
+- CRITICAL: page.tsx is a LEAF COMPONENT — DO NOT write {children} here.
+- CRITICAL: NEVER write a local implementation of any imported component — duplicate-identifier error.
 ` : ''}
 
 ${fileSpec.path === 'app/globals.css' ? `
@@ -1188,7 +1220,27 @@ export default function ${safeName}() {
            }
         }
 
-if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.*\/page\.tsx$/)) {
+if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.+\/page\.tsx$/)) {
+        // ── Import-depth normalizer backstop ──────────────────────────────────────────────────
+        // The model sometimes uses the wrong number of '../' segments for deeply nested pages.
+        // relPathToLib/Components/Hooks are computed from actual file depth at prompt time.
+        // Here we post-process to fix any surviving wrong-depth imports.
+        if (fileDepth > 1) {
+          // Replace any variant of '../(1-9 times)lib/' with the correct relPath
+          content = content.replace(
+            /from\s+['"](?:\.\.\/)+lib\/(lenis-provider|gsap-config)['"]/g,
+            (_, mod) => `from '${relPathToLib}/${mod}'`
+          );
+          content = content.replace(
+            /from\s+['"](?:\.\.\/)+components\/([A-Za-z0-9_-]+)['"]/g,
+            (_, comp) => `from '${relPathToComponents}/${comp}'`
+          );
+          content = content.replace(
+            /from\s+['"](?:\.\.\/)+hooks\/([A-Za-z0-9_-]+)['"]/g,
+            (_, hook) => `from '${relPathToHooks}/${hook}'`
+          );
+        }
+
         // Remove hallucinated styles object usage since page.tsx has no CSS module.
         // Use fragment-level replacement (not whole-expression) so it catches styles['x'] inside
         // concatenations like {styles['x'] + ' foo'} or template literals too.
@@ -1214,9 +1266,9 @@ if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.*\/page\.tsx
           usedComponents.add(match[1]);
         }
         
-        // Determine the correct import path for components
-        const isRootPage = fileSpec.path === 'app/page.tsx';
-        const componentsImportPath = isRootPage ? '../components' : '../../components';
+        // Determine the correct import path for components — use pre-computed relPath
+        // (relPathToComponents is computed from fileSpec.path depth, correct for any nesting level)
+        const componentsImportPath = relPathToComponents;
         
         for (const comp of usedComponents) {
           if (comp === 'LenisProvider' || comp === 'React') continue;
@@ -1270,8 +1322,7 @@ if (fileSpec.path === 'app/page.tsx' || fileSpec.path.match(/^app\/.*\/page\.tsx
             
             // Add import if not present
             if (!content.includes(`import ${componentName} from`)) {
-              const isRootPage = fileSpec.path === 'app/page.tsx';
-              const componentsImportPath = isRootPage ? '../components' : '../../components';
+              const componentsImportPath = relPathToComponents;
               if (content.trim().startsWith("'use client'") || content.trim().startsWith('"use client"')) {
                 content = content.replace(/['"]use client['"];?\s*/g, '');
                 content = "'use client';\n" + `import ${componentName} from '${componentsImportPath}/${componentName}';\n` + content;
