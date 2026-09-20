@@ -1208,10 +1208,13 @@ export default function ${safeName}() {
 
         let missingImports = '';
         if (fileSpec.path !== 'hooks/useLenis.ts' && content.includes('useLenis') && !content.includes("import { useLenis } from")) {
-            missingImports += "import { useLenis } from '../hooks/useLenis';\n";
+            missingImports += `import { useLenis } from '${relPathToHooks}/useLenis';\n`;
         }
         if (content.includes('ScrollTrigger') && !content.includes("import { ScrollTrigger } from")) {
             missingImports += "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n";
+        }
+        if (fileSpec.path !== 'lib/lenis-provider.tsx' && /\bLenis\b/.test(content) && !content.includes("import type Lenis") && !content.includes("import Lenis from")) {
+            missingImports += "import type Lenis from 'lenis';\n";
         }
         
         if (missingImports) {

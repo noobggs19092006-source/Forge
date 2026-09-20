@@ -2,12 +2,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 'var(--lg)';
-  padding-bottom: 'var(--md)';
+  padding: 'var(--md)' 0;
+  background-color: 'var(--surface-light)';
 }
 
-.footer-text {
-  color: 'var(--on-surface-light)';
-  font-size: 'var(--clamp-sm-min)';
-  line-height: 'var(--line-height-sm)';
+.footer p {
+  font-family: 'var(--font-text-family)';
+  color: 'var(--on-surface-dark)';
+  text-align: center;
 }

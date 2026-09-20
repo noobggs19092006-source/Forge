@@ -1,11 +1,19 @@
 'use client';
 import Footer from '../components/Footer';
-import LenisProvider from '../lib/lenis-provider';
-import Hero from '../components/Hero';
-export default function Home() {
+import About from '../components/About';
+import LenisProvider from '../lib/lenis-provider'
+import Hero from '../components/Hero'
+import Navbar from '../components/Navbar'
+
+const page = () => {
   return (
     <LenisProvider>
-      <Hero />
+      <div className='flex flex-col items-center justify-center min-h-screen'>
+        <Navbar id='home' />
+        <Hero id='hero' />
+      </div>
     </LenisProvider>
-  );
+  )
 }
+
+export default page

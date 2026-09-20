@@ -1,18 +1,18 @@
 'use client';
 import Lenis from 'lenis';
-import { gsapConfig } from '../lib/gsap-config';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import gsap from 'gsap';
+import { createContext, useContext, useEffect, useState } from 'react';
 export const LenisContext = createContext<Lenis | null>(null);
 
-interface LenisProviderProps {
+type LenisProviderProps = {
   children: React.ReactNode;
-}
+};
 
 const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    if (!lenis) {
+    if (typeof window !== 'undefined') {
       const lenisInstance = new Lenis({
         duration: 0.6,
         orientation: 'vertical',
@@ -21,21 +21,24 @@ const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
       });
 
       setLenis(lenisInstance);
-    }
 
-    return () => {
-      lenis?.destroy();
-    };
+      return () => {
+        lenisInstance.destroy();
+      };
+    }
   }, []);
 
   useEffect(() => {
     if (lenis) {
-      const raf = (time: number) => {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
+      const scrollHandler = ({ scroll }) => {
+        gsap.to(window, { duration: 0.6, scrollTo: scroll });
       };
 
-      requestAnimationFrame(raf);
+      lenis.on('scroll', scrollHandler);
+
+      return () => {
+        lenis.off('scroll', scrollHandler);
+      };
     }
   }, [lenis]);
 
