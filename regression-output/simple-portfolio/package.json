@@ -1,5 +1,5 @@
 {
-  "name": "portfolio",
+  "name": "your-project-name",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
@@ -26,5 +26,5 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ext js,ts,jsx,tsx,json"}
+    "lint": "eslint . --ext js,ts,jsx,tsx,mdx"}
 }

@@ -461,6 +461,7 @@ SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
 - MUST NOT use 'use client' directive (this is a Server Component)
 - NEVER use styled-jsx (e.g. <style jsx>). It is strictly forbidden in Server Components. If you need global styles, rely on the import of './globals.css'.
 - Wrap children with LenisProvider EXACTLY ONCE (MUST be inside the <body> tag, do NOT wrap the <html> tag with LenisProvider)
+- DO NOT import or use gsapConfig in layout.tsx. Only import LenisProvider.
 - Set data-theme="dark" on html element for dark mode
 - Use font-display: optional for Google Fonts (CLS = 0)
 - TYPE the children prop: children: React.ReactNode (NOT implicit any)
@@ -992,7 +993,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
     // an otherwise-valid component -- these issues can occur independently.
     if (validation.data && validation.data.content && fileSpec.path === 'app/layout.tsx') {
       validation.data.content = validation.data.content.replace(
-        /<LenisProvider>([\s\S]*?)<LenisProvider>([\s\S]*?)<\/LenisProvider>([\s\S]*?)<\/LenisProvider>/gi,
+        /<LenisProvider[^>]*>([\s\S]*?)<LenisProvider[^>]*>([\s\S]*?)<\/LenisProvider>([\s\S]*?)<\/LenisProvider>/gi,
         '<LenisProvider>$1$2$3</LenisProvider>'
       );
       validation.data.content = validation.data.content.replace(/className=\{styles\['([^']+)'\]\}/g, "className='$1'");

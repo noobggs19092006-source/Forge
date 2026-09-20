@@ -1,0 +1,294 @@
+ΓòöΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòù
+Γòæ  FORGE REGRESSION TEST SUITE                  Γòæ
+Γòæ  Provider: Groq (hardcoded for speed)         Γòæ
+Γòæ  Timeout: 10 minutes per fixture              Γòæ
+ΓòÜΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓò¥
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+  REGRESSION TEST: SIMPLE
+  Prompt: {
+  "name": "Simple Portfolio",
+  "description": "A minimal portfolio landing pa...
+  Output: C:\Forge\regression-output\simple-portfolio
+  Timeout: 60 minutes
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+[PIPELINE] [stage:start] Pre-flight check: verifying Ollama at http://127.0.0.1:11434...
+[PIPELINE] [stage:start] Ollama connectivity OK. Model "qwen2.5-coder:7b" available.
+[PIPELINE] [pipeline:start] Starting Forge pipeline for: "{
+  "name": "Simple Portfolio",
+  "description": "A minimal portfolio landing pa..."
+[PIPELINE] [stage:start] Starting intake...
+[PIPELINE] [stage:complete] intake complete (5.8s)
+[PIPELINE] [stage:start] Starting architect...
+[PIPELINE] [stage:complete] architect complete (3.1s)
+[PIPELINE] [stage:start] Starting design-brain...
+[PIPELINE] [stage:complete] design-brain complete (45.3s)
+[PIPELINE] [stage:start] Starting motion-brain...
+[PIPELINE] [stage:complete] motion-brain complete (6.1s)
+[PIPELINE] [stage:start] Starting codegen...
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 17 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:start] Codegen pass 1/2: 17 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating config batch (package.json, tailwind.config.ts, postcss.config.js)...
+[PIPELINE] [codegen:file:success] Generated (batch): package.json
+[PIPELINE] [codegen:file:success] Generated (batch): tailwind.config.ts
+[PIPELINE] [codegen:file:success] Generated (batch): postcss.config.js
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [stage:start] Generating app/globals.css...
+[PIPELINE] [codegen:file:success] Generated: app/globals.css
+[PIPELINE] [stage:complete] Generated app/globals.css
+[PIPELINE] [stage:start] Generating lib/gsap-config.ts...
+[PIPELINE] [codegen:file:success] Generated: lib/gsap-config.ts
+[PIPELINE] [stage:complete] Generated lib/gsap-config.ts
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [stage:start] Generating hooks/useReducedMotion.ts...
+[PIPELINE] [codegen:file:success] Generated: hooks/useReducedMotion.ts
+[PIPELINE] [stage:complete] Generated hooks/useReducedMotion.ts
+[PIPELINE] [stage:start] Generating next.config.js...
+[PIPELINE] [codegen:file:success] Generated: next.config.js
+[PIPELINE] [stage:complete] Generated next.config.js
+[PIPELINE] [stage:start] Generating tsconfig.json...
+[PIPELINE] [codegen:file:success] Generated: tsconfig.json
+[PIPELINE] [stage:complete] Generated tsconfig.json
+[PIPELINE] [stage:start] Generating components/Footer.module.css...
+[PIPELINE] [codegen:file:success] Generated: components/Footer.module.css
+[PIPELINE] [stage:complete] Generated components/Footer.module.css
+[PIPELINE] [stage:start] Generating app/page.module.css...
+[PIPELINE] [codegen:file:success] Generated: app/page.module.css
+[PIPELINE] [stage:complete] Generated app/page.module.css
+[PIPELINE] [stage:start] Generating components/Hero.module.css...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.module.css
+[PIPELINE] [stage:complete] Generated components/Hero.module.css
+[PIPELINE] [stage:start] Generating hooks/useLenis.ts...
+[PIPELINE] [codegen:file:success] Generated: hooks/useLenis.ts
+[PIPELINE] [stage:complete] Generated hooks/useLenis.ts
+[PIPELINE] [stage:start] Generating components/Footer.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Footer.tsx
+[PIPELINE] [stage:complete] Generated components/Footer.tsx
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [stage:start] Generating app/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/page.tsx
+[PIPELINE] [stage:complete] Generated app/page.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 17 succeeded, 0 failed, 0 blocked, 0 skipped (109.4s)
+[PIPELINE] [stage:complete] Codegen complete: 17/17 succeeded on pass 1
+[PIPELINE] [stage:complete] codegen complete (109.4s)
+[PIPELINE] [qa:check] QA Gate: Checking 1 page(s) (attempt 1/4)
+{
+  "pagesToCheck": 1
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [fast] for /: FAILED (9 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 9,
+  "mode": "fast"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:retry] QA failed for 1 page(s) ΓÇö regenerating failed pages (attempt 2/4)
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 17 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:complete] Checkpoint resume: 12/17 files already generated, skipping
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/globals.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): lib/gsap-config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useReducedMotion.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useLenis.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): package.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): next.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tsconfig.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tailwind.config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): postcss.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Footer.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Hero.module.css
+[PIPELINE] [stage:start] Codegen pass 1/2: 5 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [stage:start] Generating components/Footer.tsx...
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Footer.tsx
+[PIPELINE] [stage:complete] Generated components/Footer.tsx
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [stage:start] Generating app/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/page.tsx
+[PIPELINE] [stage:complete] Generated app/page.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 5 succeeded, 0 failed, 0 blocked, 0 skipped (29.9s)
+[PIPELINE] [stage:complete] Codegen complete: 17/17 succeeded on pass 1
+[PIPELINE] [qa:check] QA Gate: Checking 1 page(s) (attempt 2/4)
+{
+  "pagesToCheck": 1
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [fast] for /: FAILED (10 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 10,
+  "mode": "fast"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:retry] QA failed for 1 page(s) ΓÇö regenerating failed pages (attempt 3/4)
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 17 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:complete] Checkpoint resume: 13/17 files already generated, skipping
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/globals.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): lib/gsap-config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useReducedMotion.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useLenis.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): package.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): next.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tsconfig.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tailwind.config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): postcss.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Footer.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Footer.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Hero.module.css
+[PIPELINE] [stage:start] Codegen pass 1/2: 4 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [stage:start] Generating app/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/page.tsx
+[PIPELINE] [stage:complete] Generated app/page.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 4 succeeded, 0 failed, 0 blocked, 0 skipped (28.8s)
+[PIPELINE] [stage:complete] Codegen complete: 17/17 succeeded on pass 1
+[PIPELINE] [qa:check] QA Gate: Checking 1 page(s) (attempt 3/4)
+{
+  "pagesToCheck": 1
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [fast] for /: FAILED (9 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 9,
+  "mode": "fast"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.0s)
+[PIPELINE] [stage:retry] QA failed for 1 page(s) ΓÇö regenerating failed pages (attempt 4/4)
+[PIPELINE] [stage:start] Generating file list from sitemap...
+[PIPELINE] [stage:complete] File list generated: 17 files
+[PIPELINE] [stage:start] Validating dependency graph...
+[PIPELINE] [stage:complete] Dependency graph validated (no cycles)
+[PIPELINE] [stage:complete] Checkpoint resume: 13/17 files already generated, skipping
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/globals.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): lib/gsap-config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useReducedMotion.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): hooks/useLenis.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): package.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): next.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tsconfig.json
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): tailwind.config.ts
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): postcss.config.js
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Footer.tsx
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Footer.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): app/page.module.css
+[PIPELINE] [codegen:file:skipped] Skipped (checkpoint resume): components/Hero.module.css
+[PIPELINE] [stage:start] Codegen pass 1/2: 4 file(s) to generate in parallel levels
+[PIPELINE] [stage:start] Generating app/layout.tsx...
+[PIPELINE] [stage:start] Generating lib/lenis-provider.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/layout.tsx
+[PIPELINE] [stage:complete] Generated app/layout.tsx
+[PIPELINE] [codegen:file:success] Generated: lib/lenis-provider.tsx
+[PIPELINE] [stage:complete] Generated lib/lenis-provider.tsx
+[PIPELINE] [stage:start] Generating components/Hero.tsx...
+[PIPELINE] [codegen:file:success] Generated: components/Hero.tsx
+[PIPELINE] [stage:complete] Generated components/Hero.tsx
+[PIPELINE] [stage:start] Generating app/page.tsx...
+[PIPELINE] [codegen:file:success] Generated: app/page.tsx
+[PIPELINE] [stage:complete] Generated app/page.tsx
+[PIPELINE] [codegen:pass:complete] Pass 1 complete: 4 succeeded, 0 failed, 0 blocked, 0 skipped (37.8s)
+[PIPELINE] [stage:complete] Codegen complete: 17/17 succeeded on pass 1
+[PIPELINE] [qa:check] QA Gate: Checking 1 page(s) (attempt 4/4)
+{
+  "pagesToCheck": 1
+}
+[PIPELINE] [stage:start] Starting qa-gate...
+[PIPELINE] [qa:check] QA Gate [full] for /: FAILED (11 fix tickets)
+{
+  "page": "/",
+  "passed": false,
+  "tickets": 11,
+  "mode": "full"
+}
+[PIPELINE] [stage:complete] qa-gate complete (0.2s)
+[PIPELINE] [stage:start] Starting sitemap-verification...
+[PIPELINE] [stage:complete] Sitemap verification passed: all required files present
+[PIPELINE] [stage:complete] sitemap-verification complete (0.0s)
+[PIPELINE] [stage:start] Starting build...
+[PIPELINE] [stage:start] Running next build...
+[PIPELINE] [stage:start] Unloading 1 Ollama model(s) to free memory for build...
+[PIPELINE] [stage:start] Installing dependencies...
+(node:25416) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[PIPELINE] [stage:start] npm version: 11.6.2
+[PIPELINE] [stage:start] Running next build...
+file:///C:/Forge/core/dist/orchestrator/pipeline.js:716
+                        reject(new Error(`next build failed with exit code ${code}:\n${output}`));
+                               ^
+
+Error: next build failed with exit code 1:
+  Γû▓ Next.js 15.0.0
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully
+   Linting and checking validity of types ...
+
+   We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+   The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+   	- lib was set to dom,dom.iterable,esnext
+   	- allowJs was set to true
+   	- noEmit was set to true
+   	- incremental was set to true
+   	- plugins was updated to add { name: 'next' }
+
+   The following mandatory changes were made to your tsconfig.json:
+
+   	- resolveJsonModule was set to true (to match webpack resolution)
+   	- isolatedModules was set to true (requirement for SWC / Babel)
+
+Failed to compile.
+
+./app/layout.tsx:19:30
+Type error: Cannot find name 'gsapConfig'.
+
+  17 |       <body>
+  18 |         <LenisProvider>
+> 19 |           <LenisProvider {...gsapConfig}>
+     |                              ^
+  20 | {children}
+  21 | </LenisProvider>
+  22 |         </LenisProvider>
+
+    at ChildProcess.<anonymous> (file:///C:/Forge/core/dist/orchestrator/pipeline.js:716:32)
+    at ChildProcess.emit (node:events:508:28)
+    at maybeClose (node:internal/child_process:1101:16)
+    at ChildProcess._handle.onexit (node:internal/child_process:305:5)
+
+Node.js v24.11.1

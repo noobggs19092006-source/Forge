@@ -2,8 +2,8 @@ import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}"
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './components/**/*.{js,ts,jsx,tsx,mdx}'
   ],
   theme: {
     extend: {
@@ -15,11 +15,7 @@ const config: Config = {
         'on-surface-light': 'var(--on-surface-light)',
         'on-surface-dark': 'var(--on-surface-dark)',
         'accent-light': 'var(--accent-light)',
-        'accent-dark': 'var(--accent-dark)',
-        'muted-light': 'var(--muted-light)',
-        'muted-dark': 'var(--muted-dark)',
-        'on-muted-light': 'var(--on-muted-light)',
-        'on-muted-dark': 'var(--on-muted-dark)'
+        'accent-dark': 'var(--accent-dark)'
       },
       spacing: {
         baseUnit: '--base-unit',
@@ -31,26 +27,11 @@ const config: Config = {
         '2xl': '--2xl'
       },
       fontSize: {
-        'clamp-xs-min': '--clamp-xs-min',
-        'clamp-xs-max': '--clamp-xs-max',
-        xs: '--clamp-xs',
-        lineHeightXs: '--line-height-xs',
-        'clamp-sm-min': '--clamp-sm-min',
-        'clamp-sm-max': '--clamp-sm-max',
-        sm: '--clamp-sm',
-        lineHeightSm: '--line-height-sm',
-        base: '--clamp-base',
-        lineHeightBase: '--line-height-base',
-        lg: '--clamp-lg',
-        lineHeightLg: '--line-height-lg',
-        'clamp-xl-min': '--clamp-xl-min',
-        'clamp-xl-max': '--clamp-xl-max',
-        xl: '--clamp-xl',
-        lineHeightXl: '--line-height-xl'
-      },
-      animation: {
-        defaultEasing: 'var(--default-easing)',
-        defaultDuration: 'var(--default-duration)'
+        base: 'var(--clamp-base)',
+        xs: 'var(--clamp-xs)',
+        sm: 'var(--clamp-sm)',
+        lg: 'var(--clamp-lg)',
+        xl: 'var(--clamp-xl)'
       }
     }
   },

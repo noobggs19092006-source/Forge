@@ -1,10 +1,10 @@
 {
+  "lib": [
+    "dom",
+    "dom.iterable",
+    "esnext"
+  ],
   "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
     "target": "es5",
     "module": "esnext",
     "strict": true,
@@ -21,6 +21,11 @@
         "./*"
       ]
     },
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
@@ -33,9 +38,9 @@
     ]
   },
   "include": [
+    "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [

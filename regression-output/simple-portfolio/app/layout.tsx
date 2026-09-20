@@ -16,9 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <LenisProvider>
-          {children}
-
-
+          <LenisProvider {...gsapConfig}>
+{children}
+</LenisProvider>
         </LenisProvider>
       </body>
     </html>

@@ -2,13 +2,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 'var(--md)' 0;
-  background-color: 'var(--surface-light)';
+  padding-top: 'var(--lg)';
+  padding-bottom: 'var(--md)';
 }
 
-.footer p {
-  color: 'var(--on-surface-dark)';
-  font-family: 'var(--font-text-family)';
+.footer-text {
+  color: 'var(--on-surface-light)';
   font-size: 'var(--clamp-sm-min)';
   line-height: 'var(--line-height-sm)';
 }

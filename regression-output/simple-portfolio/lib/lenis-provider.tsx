@@ -12,7 +12,7 @@ const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (!lenis) {
       const lenisInstance = new Lenis({
         duration: 0.6,
         orientation: 'vertical',
@@ -21,20 +21,28 @@ const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
       });
 
       setLenis(lenisInstance);
+    }
 
-      function raf(time: number) {
-        lenis?.raf(time);
+    return () => {
+      lenis?.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (lenis) {
+      const raf = (time: number) => {
+        lenis.raf(time);
         requestAnimationFrame(raf);
-      }
+      };
 
       requestAnimationFrame(raf);
     }
-  }, []);
+  }, [lenis]);
 
   return (
-    <div style={{ height: '100vh', overflowY: 'auto' }}>
-      {children}
-    </div>
+    <LenisContext.Provider value={lenis}>
+      <div style={{ height: '100vh', overflowY: 'auto' }}>{children}</div>
+    </LenisContext.Provider>
   );
 };
 
