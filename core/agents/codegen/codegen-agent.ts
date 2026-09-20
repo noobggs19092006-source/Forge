@@ -731,6 +731,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
              `- IMPORT gsapConfig CORRECTLY: import { gsapConfig } from '${relPathToLib}/gsap-config'; (Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values)\n` +
              '- ALWAYS include ALL imports used in the file! If you use lenis, you MUST import it!\n' +
              '- For React hooks (useEffect, useRef, useState), ALWAYS import them explicitly: import React, { useEffect, useRef, useState } from \'react\';\n' +
+             '- If you use the Lenis type in TypeScript (e.g., useRef<Lenis | null>), you MUST import it: import type Lenis from \'lenis\';\n' +
 
            '- PROPS: ALWAYS declare an interface for your props (e.g. interface Props { id?: string }) and accept id in your component signature.\n' +
            '- CRITICAL RULE ABOUT IMPORTS: You MUST NOT write any duplicate imports. If you imported react hooks at the top, DO NOT write \'import { useEffect } from "react";\' again! DO NOT write \'import gsap from "gsap";\' again! ONLY ONE IMPORT PER MODULE IS ALLOWED.\n' +

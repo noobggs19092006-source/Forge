@@ -19,9 +19,7 @@ const config: Config = {
         'muted-light': 'var(--muted-light)',
         'muted-dark': 'var(--muted-dark)',
         'on-muted-light': 'var(--on-muted-light)',
-        'on-muted-dark': 'var(--on-muted-dark)',
-        'error-light': 'var(--error-light)',
-        'error-dark': 'var(--error-dark)'
+        'on-muted-dark': 'var(--on-muted-dark)'
       },
       spacing: {
         baseUnit: '--base-unit',
@@ -32,36 +30,30 @@ const config: Config = {
         xl: '--xl',
         '2xl': '--2xl'
       },
-      typography: {
-        fontFamily: {
-          display: 'var(--font-display-family)',
-          text: 'var(--font-text-family)'
-        }
+      fontSize: {
+        'clamp-xs-min': '--clamp-xs-min',
+        'clamp-xs-max': '--clamp-xs-max',
+        xs: '--clamp-xs',
+        lineHeightXs: '--line-height-xs',
+        'clamp-sm-min': '--clamp-sm-min',
+        'clamp-sm-max': '--clamp-sm-max',
+        sm: '--clamp-sm',
+        lineHeightSm: '--line-height-sm',
+        base: '--clamp-base',
+        lineHeightBase: '--line-height-base',
+        lg: '--clamp-lg',
+        lineHeightLg: '--line-height-lg',
+        'clamp-xl-min': '--clamp-xl-min',
+        'clamp-xl-max': '--clamp-xl-max',
+        xl: '--clamp-xl',
+        lineHeightXl: '--line-height-xl'
       },
-      extend: {
-        fontSize: {
-          xs: 'var(--clamp-xs)',
-          sm: 'var(--clamp-sm)',
-          base: 'var(--clamp-base)',
-          lg: 'var(--clamp-lg)',
-          xl: 'var(--clamp-xl)'
-        },
-        lineHeight: {
-          xs: 'var(--line-height-xs)',
-          sm: 'var(--line-height-sm)',
-          base: 'var(--line-height-base)',
-          lg: 'var(--line-height-lg)',
-          xl: 'var(--line-height-xl)'
-        }
-      },
-      extend: {
-        animation: {
-          'clip-path-circle': 'clipPathCircle 0.6s ease-out forwards'
-        }
+      animation: {
+        defaultEasing: 'var(--default-easing)',
+        defaultDuration: 'var(--default-duration)'
       }
     }
   },
-  variants: {},
   plugins: []
 };
 

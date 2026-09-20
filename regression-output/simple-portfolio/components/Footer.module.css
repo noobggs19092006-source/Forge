@@ -2,12 +2,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  padding-top: 'var(--lg)';
-  padding-bottom: 'var(--md)';
+  padding: 'var(--md)' 0;
+  background-color: 'var(--surface-light)';
 }
 
-.footer-text {
-  font-size: 'var(--clamp-md-min)';
-  line-height: 'var(--line-height-md)';
-  color: 'var(--on-surface-light)';
+.footer p {
+  color: 'var(--on-surface-dark)';
+  font-family: 'var(--font-text-family)';
+  font-size: 'var(--clamp-sm-min)';
+  line-height: 'var(--line-height-sm)';
 }

@@ -1,39 +1,50 @@
 'use client';
 import styles from './Hero.module.css';
 import '../app/globals.css';
-import { gsap } from 'gsap';
+import { useLenis } from '../hooks/useLenis';
+import useReducedMotion from '../hooks/useReducedMotion';
+import React, { useEffect, useRef } from 'react';
+import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { gsapConfig } from '../../lib/gsap-config';
-import { useEffect } from "react";
-
-// use client;
-interface Props {
-  id?: string;
-}
-
-const Hero: React.FC<Props> = ({ id }) => {
+import { gsapConfig } from '../lib/gsap-config';
+const Hero: React.FC<{ id?: string }> = ({ id }) => {
   const prefersReducedMotion = useReducedMotion();
-  const heroRef = useRef<HTMLDivElement>(null);
+  const lenisRef = useRef<Lenis | null>(null);
+  const heroContentRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (heroRef.current && !prefersReducedMotion) {
-      gsap.to(heroRef.current, {
-        scrollTrigger: { trigger: heroRef.current },
-        duration: gsapConfig.defaultDuration,
-        ease: gsapConfig.defaultEasing,
-        y: -50,
-        opacity: 1
+    if (lenisRef.current) return;
+
+    const lenisInstance = new Lenis({ duration: gsapConfig.defaultDuration, easing: gsapConfig.defaultEasing });
+    lenisRef.current = lenisInstance;
+
+    function raf(time: number) {
+      lenis?.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+  }, []);
+
+  useEffect(() => {
+    if (heroContentRef.current && !prefersReducedMotion) {
+      gsap.to(heroContentRef.current, { opacity: 0, y: -50, duration: gsapConfig.defaultDuration * 2, ease: gsapConfig.defaultEasing });
+
+      ScrollTrigger.create({
+        trigger: heroContentRef.current,
+        start: 'top bottom-=10%',
+        end: 'bottom top+=10%'
       });
     }
-  }, [heroRef, prefersReducedMotion]);
+  }, [heroContentRef, prefersReducedMotion]);
 
   return (
-    <div ref={heroRef} className={styles['hero-section']}>
-      <div className={styles['hero-content']}>
-        <h2 className={styles['hero-title']} id={`${id}-title`}>Welcome to Our Site</h2>
-        <p className={styles['hero-subtitle']} id={`${id}-subtitle`} data-scroll-trigger="true">Scroll down for more information.</p>
+    <section id={id} className={styles.heroSection}>
+      <div ref={heroContentRef} className={styles['hero-content']}>
+        <h1 className={styles['hero-title']}>Welcome to My Portfolio</h1>
+        <p className={styles['hero-subtitle']}>Explore my works and get inspired!</p>
       </div>
-    </div>
+    </section>
   );
 };
 

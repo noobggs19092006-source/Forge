@@ -1,15 +1,13 @@
-import React from 'react';
+'use client';
+import React from "react";
 import styles from './Footer.module.css';
-
-// use client;
-
 interface Props {
   id?: string;
 }
 
 const Footer: React.FC<Props> = ({ id }) => (
   <footer className={styles.footer}>
-    <div className={styles['footer-text']}>© 2023 Your Company</div>
+    <p>&copy; {new Date().getFullYear()} Your Name</p>
   </footer>
 );
 

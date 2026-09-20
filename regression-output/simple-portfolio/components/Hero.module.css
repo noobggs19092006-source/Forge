@@ -1,27 +1,25 @@
 .hero-section {
-  position: relative;
-  width: 100%;
-  height: calc(100vh - var(--gutter-width));
+    position: relative;
+    width: 100%;
+    height: clamp(50vh, 30rem, 60vh);
 }
 
 .hero-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  color: 'var(--on-surface-light)';
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: 'var(--on-surface-light)';
+    font-family: 'var(--font-text-family)';
 }
 
 .hero-title {
-  font-family: 'var(--font-display-family)';
-  font-size: 'var(--clamp-lg-min)';
-  line-height: 'var(--line-height-lg)';
-  margin-bottom: 'var(--md)';
+    font-size: clamp(2rem, 1.5rem + 0.3vw, 4rem);
+    line-height: 1.8;
+    margin-bottom: 'var(--md)';
 }
 
 .hero-subtitle {
-  font-family: 'var(--font-text-family)';
-  font-size: 'var(--clamp-md-min)';
-  line-height: 'var(--line-height-md)';
+    font-size: clamp(1rem, 0.75rem + 0.2vw, 1.5rem);
+    line-height: 1.6;
 }
