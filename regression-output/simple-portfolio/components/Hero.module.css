@@ -1,23 +1,22 @@
 .hero-section {
+  position: relative;
+  width: 100%;
+  height: clamp(50vh, 600px, 80vh);
+}
+.hero-content {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   text-align: center;
-}
-
-.hero-title {
-  font-size: 'var(--clamp-md)';
-  line-height: 'var(--line-height-md)';
   color: 'var(--primary-light)';
-  opacity: 0;
-  transform-origin: top;
+  font-family: 'var(--font-text-family)';
 }
-
+.hero-title {
+  font-size: clamp(2rem, 3vw, 4rem);
+  line-height: 1.2;
+  margin-bottom: 'var(--lg)';
+}
 .hero-subtitle {
-  font-size: 'var(--clamp-sm)';
-  line-height: 'var(--line-height-sm)';
-  color: 'var(--on-surface-light)';
-  scale: 0.8;
-  transform-origin: bottom;
+  font-size: clamp(1rem, 2vw, 2rem);
+  opacity: 0;
 }

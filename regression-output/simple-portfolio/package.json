@@ -26,6 +26,5 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint . --ext js,ts,jsx,tsx,mdx"
-  }
+    "lint": "eslint . --ext js,ts,jsx,tsx,mdx"}
 }

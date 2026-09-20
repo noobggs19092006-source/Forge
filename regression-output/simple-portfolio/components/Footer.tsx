@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Footer.module.css';
 
-//use client;
+// use client;
 
 interface Props {
   id?: string;
@@ -9,7 +9,7 @@ interface Props {
 
 const Footer: React.FC<Props> = ({ id }) => (
   <footer className={styles.footer}>
-    <p className={styles['on-surface-dark']}>© 2023 Your Company</p>
+    <div className={styles['copyright']}>{id ? `© ${new Date().getFullYear()} Your Name` : '© 2023 Your Name'}</div>
   </footer>
 );
 

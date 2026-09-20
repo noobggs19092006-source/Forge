@@ -3,10 +3,13 @@ import styles from './Hero.module.css';
 import '../app/globals.css';
 import { useLenis } from '../hooks/useLenis';
 import useReducedMotion from '../hooks/useReducedMotion';
-import React, { useEffect, useRef } from 'react';
+import type Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { gsapConfig } from '../lib/gsap-config';
+import { useEffect } from "react";
+
+// use client;
 interface Props {
   id?: string;
 }
@@ -18,42 +21,35 @@ const Hero: React.FC<Props> = ({ id }) => {
   const heroSubtitleRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
-    if (lenisRef.current) return;
-
-    const lenis = new Lenis({ duration: gsapConfig.defaultDuration, easing: gsapConfig.defaultEasing });
-    lenisRef.current = lenis;
-
-    function raf(time: number) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
+    if (!lenisRef.current && !prefersReducedMotion) {
+      lenisRef.current = new Lenis({ duration: gsapConfig.defaultDuration, easing: gsapConfig.defaultEasing });
     }
-
-    requestAnimationFrame(raf);
-  }, []);
-
-  useEffect(() => {
-    if (prefersReducedMotion || !heroTitleRef.current || !heroSubtitleRef.current) return;
-
-    gsap.to(heroTitleRef.current, {
-      scrollTrigger: { trigger: heroTitleRef.current, start: 'top center', end: 'bottom center' },
-      opacity: 1,
-      y: -20,
-      duration: gsapConfig.defaultDuration,
-      ease: gsapConfig.defaultEasing
-    });
-
-    gsap.to(heroSubtitleRef.current, {
-      scrollTrigger: { trigger: heroSubtitleRef.current, start: 'top center', end: 'bottom center' },
-      scale: 1,
-      duration: gsapConfig.defaultDuration,
-      ease: gsapConfig.defaultEasing
-    });
   }, [prefersReducedMotion]);
 
+  useEffect(() => {
+    if (lenisRef.current && heroTitleRef.current) {
+      const tl = gsap.timeline();
+      tl.fromTo(heroTitleRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: gsapConfig.defaultDuration });
+    }
+
+    if (lenisRef.current && heroSubtitleRef.current) {
+      const tl = gsap.timeline();
+tl.fromTo(heroSubtitleRef.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: gsapConfig.defaultDuration });
+    }
+
+    return () => {
+      if (lenisRef.current) {
+        lenisRef.current.destroy();
+      }
+    };
+  }, [heroTitleRef, heroSubtitleRef]);
+
   return (
-    <div className={styles['hero-section']} id={id || 'hero'}>
-      <h1 ref={heroTitleRef} className={styles['hero-title']}>Welcome to My Portfolio</h1>
-      <p ref={heroSubtitleRef} className={styles['hero-subtitle']}>A showcase of my work and skills.</p>
+    <div className={styles['hero-section']} id={id}>
+      <div className={styles['hero-content']}>
+        <h1 ref={heroTitleRef} className={styles['hero-title']}>Portfolio</h1>
+        <p ref={heroSubtitleRef} className={styles['hero-subtitle']}>Welcome to my digital portfolio.</p>
+      </div>
     </div>
   );
 };

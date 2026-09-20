@@ -1,24 +1,32 @@
 .hero-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  clip-path: circle(0% at center);
+  opacity: 1;
 }
 
-.hero-title,
-.subtitle {
-  font-family: 'var(--font-display-family)';
-  text-align: center;
+.hero-section[data-scroll-enter] {
+  animation-name: heroClipPathAnimation;
+  animation-duration: 'var(--default-duration)';
+  animation-timing-function: 'var(--default-easing)';
+  animation-delay: calc(var(--stagger-interval) * -1);
+}
+
+@keyframes heroClipPathAnimation {
+  from { clip-path: circle(0% at center); }
+  to { clip-path: circle(50% at center); }
+}
+
+.portfolio-item {
   opacity: 0;
-  transform-origin: top;
 }
 
-.hero-title {
-  max-width: clamp(var(--clamp-xl-min), calc(1.4375rem + 0.8vw), var(--clamp-xl-max));
-  line-height: 'var(--line-height-xl)';
+.portfolio-item[data-scroll-enter] {
+  animation-name: portfolioItemFadeInAnimation;
+  animation-duration: 'var(--default-duration)';
+  animation-timing-function: 'var(--default-easing)';
+  animation-delay: calc(var(--stagger-interval) * -1);
 }
 
-.subtitle {
-  font-size: clamp(var(--clamp-md-min), calc(1.6875rem + 0.9vw), var(--clamp-md-max));
-  line-height: 'var(--line-height-md)';
-  transform: scale(0.8);
+@keyframes portfolioItemFadeInAnimation {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

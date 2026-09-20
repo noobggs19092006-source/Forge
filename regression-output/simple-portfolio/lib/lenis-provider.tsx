@@ -4,9 +4,9 @@ import gsap from 'gsap';
 import { createContext, useContext, useEffect, useState } from 'react';
 export const LenisContext = createContext<Lenis | null>(null);
 
-type LenisProviderProps = {
+interface LenisProviderProps {
   children: React.ReactNode;
-};
+}
 
 const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
   const [lenis, setLenis] = useState<Lenis | null>(null);
@@ -31,7 +31,7 @@ const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
   useEffect(() => {
     if (lenis) {
       const scrollHandler = ({ scroll }) => {
-        gsap.to(window, { duration: 0.6, scrollTo: scroll });
+        // handler body
       };
 
       lenis.on('scroll', scrollHandler);
