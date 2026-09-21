@@ -167,6 +167,13 @@ PACKAGE.JSON DEPENDENCY VERSION CONSTRAINTS (MANDATORY - these are tested workin
 - @types/react-dom: "^18.3.0"
 - @types/node: "^22.7.0"
 
+7. TYPESCRIPT SYNTAX CONSTRAINTS:
+   - NEVER use optional chaining (?.) on the left-hand side of an assignment. This is a syntax error.
+     WRONG: lenisRef.current?.style.opacity = '1';
+     RIGHT: if (lenisRef.current) { lenisRef.current.style.opacity = '1'; }
+   - NEVER use ?. before = in any expression. Use an explicit if-null-guard instead.
+   - CSS module .module.css files are plain CSS — NEVER write JavaScript template literals (\${...}) in them.
+
 Output MUST be a JSON object mapping file paths to their content, along with any dependencies.`;
 
   protected override formatInput(input: CodegenInput): string {
@@ -451,6 +458,7 @@ SPECIFIC NEXT.CONFIG.JS REQUIREMENTS:
 - Do NOT use path aliases like @/lib -- this is a CommonJS file, aliases only work in TypeScript/ES modules
 - Do NOT include any import statements
 - The content MUST be valid JavaScript with actual newlines (NOT escaped \\n in the output file)
+- This is a plain JavaScript config file (NOT a React component). Do NOT include a 'use client' directive anywhere in this file -- it does not need one and including one will break the build.
 ` : ''}
 
 ${fileSpec.path === 'app/layout.tsx' ? `
@@ -484,19 +492,30 @@ ${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}
 - ONLY import and render section components that EXIST in the sitemap sections array (use the exact 'componentName' field)
 - For the current sitemap, the sections are: ${JSON.stringify(input.sitemap.pages.flatMap(p => p.sections.map(s => ({ id: s.id, contentType: s.contentType, componentName: s.id.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('') }))), null, 2)}
 - DO NOT import Footer in page.tsx - Footer is rendered via layout.tsx
-- Use proper semantic HTML structure
+- Use proper semantic HTML structure: <main> wrapper, sections with IDs
 - CRITICAL: page.tsx is a LEAF COMPONENT — it does NOT receive or render a 'children' prop. DO NOT write {children} here.
 - CRITICAL: This file does NOT import a CSS module. NEVER reference \`styles\` in any form. Use plain string className values.
 - CRITICAL: NEVER write a local implementation (const X = () => ...) of any component you have already imported — duplicate-identifier error.
+- CRITICAL: page.tsx is a React component that RETURNS JSX. Output a valid function component:
+  export default function HomePage() {
+    return (
+      <LenisProvider>
+        <main>
+          <section id="hero"><Hero id="hero" /></section>
+          <section id="cta"><Cta id="cta" /></section>
+        </main>
+      </LenisProvider>
+    );
+  }
+- DO NOT write loose statements (like variable assignments, function calls) outside the component function.
+- DO NOT write raw HTML/JSX directly at module scope — everything must be inside the return of the component function.
 ` : ''}
 
 ${fileSpec.path.match(/^app\/.+\/page\.tsx$/) ? `
 SPECIFIC PAGE.TSX REQUIREMENTS (for nested pages under app/):
 - MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line)
 - This file lives at: ${fileSpec.path}
-- EXACT import for LenisProvider (copy verbatim, do not alter the path): import LenisProvider from '${relPathToLib}/lenis-provider'
 - EXACT import path prefix for components (copy verbatim): import ComponentName from '${relPathToComponents}/ComponentName'
-- EXACT import path prefix for hooks (copy verbatim): import { useLenis } from '${relPathToHooks}/useLenis'
 - DO NOT use '../../lib', '../lib', '@/lib', or any other path — use ONLY the exact paths shown above for this file.
 ${availableComponentNames.length > 0 ? `- AVAILABLE COMPONENTS (you may ONLY import from this exact list — never invent a name not on it):
 ${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}/${n}'`).join('\n')}` : ''}
@@ -508,6 +527,9 @@ ${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}
 - DO NOT include <script> tags in JSX
 - CRITICAL: page.tsx is a LEAF COMPONENT — DO NOT write {children} here.
 - CRITICAL: NEVER write a local implementation of any imported component — duplicate-identifier error.
+- CRITICAL: DO NOT import LenisProvider in this file. LenisProvider is ALREADY applied in app/layout.tsx and wraps all pages globally. Importing or using it again here will cause duplicate context and TypeScript errors.
+- CRITICAL: DO NOT import or call useLenis() in this file. Page-level files do not manage scroll — that is handled by section components.
+- CRITICAL: DO NOT pass any props to LenisProvider (e.g., lenis={{...}} is WRONG). LenisProvider only accepts 'children'. Any other prop will cause a TypeScript build error.
 ` : ''}
 
 ${fileSpec.path === 'app/globals.css' ? `
@@ -534,6 +556,7 @@ SPECIFIC APP/GLOBALS.CSS REQUIREMENTS:
 - DO NOT invent variable names not listed above
 - Use the EXACT naming convention: kebab-case with -- prefix
 - Output valid CSS only, no markdown fences, no explanations
+- CRITICAL: Output ONLY the :root { ... } block (and any additional rules). Do NOT append any JavaScript, TypeScript, or module import text after the CSS. Do NOT write 'LenisProvider', 'gsapConfig', 'import', or any JS identifier outside a CSS rule. Any non-CSS text after the closing } will cause a build-breaking PostCSS syntax error.
 ` : ''}
 
 ${fileSpec.path === 'components/Footer.tsx' ? `
@@ -628,6 +651,7 @@ SPECIFIC POSTCSS.CONFIG.JS REQUIREMENTS:
 - Include plugins: postcss-import, tailwindcss, autoprefixer, postcss-nested (for @layer support)
 - Configure postcss-nested to enable @layer and nesting
 - Output a minimal valid config
+- This is a plain JavaScript config file (NOT a React component). Do NOT include a 'use client' directive anywhere in this file -- it does not need one and including one will break the build.
 ` : ''}
 
 ${fileSpec.path === 'lib/gsap-config.ts' ? `
@@ -638,9 +662,46 @@ SPECIFIC GSAP-CONFIG.TS REQUIREMENTS:
 - Export motion constants: defaultEasing, defaultDuration, staggerInterval
 - Export a config object: export const gsapConfig = { defaultEasing, defaultDuration, staggerInterval };
 - Export setupGSAP() function that configures GSAP and ScrollTrigger. Use ONLY valid GSAP APIs: gsap.defaults({ ease: defaultEasing, duration: defaultDuration }) and gsap.matchMedia().add("(prefers-reduced-motion: reduce)", () => { gsap.ticker.fps(1); })
-- Use 'use client' directive
+- This is a plain TypeScript utility/config file (NOT a React component). Do NOT include a 'use client' directive anywhere in this file -- it does not need one and including one (in any form, quoted or not) will break the build.
 - DO NOT export any JSX-returning component from this file — this is a .ts file (NOT .tsx) and JSX is illegal here. Only export plain constants and functions.
 - DO NOT define GSAPInitializer or any React component in this file.
+` : ''}
+
+${fileSpec.type === 'section' ? `
+SPECIFIC SECTION COMPONENT REQUIREMENTS (applies to ALL section components in components/):
+- Section components are CHILD components rendered by page.tsx — they are NOT page components themselves.
+- DO NOT import or use LenisProvider in section components — LenisProvider is ONLY used in app/layout.tsx to wrap the entire app.
+- DO NOT create new Lenis instances in section components — use the shared Lenis instance via useLenis() hook if needed.
+- Section components should focus on their own animation choreography using GSAP/ScrollTrigger.
+- Use the shared Lenis instance from context via useLenis() hook (import { useLenis } from '${relPathToHooks}/useLenis').
+- NEVER wrap section content in <LenisProvider> — this causes duplicate Lenis instances and breaks scroll.
+- ScrollTrigger callbacks must be syntactically valid: each callback (onEnter, onLeave, onEnterBack, onLeaveBack) must be a proper arrow function WITHOUT extra closing parens/braces.
+  - CORRECT: onEnter: () => { gsap.to(...); }
+  - WRONG: onEnter: () => { gsap.to(...); ); }
+- ALWAYS declare an interface for props (e.g., interface Props { id?: string }) and accept id in component signature.
+` : ''}
+
+${fileSpec.path === 'components/Navbar.tsx' ? `
+SPECIFIC NAVBAR.TSX REQUIREMENTS:
+- MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line)
+- Import usePathname from 'next/navigation': import { usePathname } from 'next/navigation';
+- DO NOT import LenisProvider — Navbar is a section component, NOT a page. LenisProvider is only in app/layout.tsx
+- DO NOT import gsapConfig — Navbar does not need GSAP animation config
+- Use CSS Modules: import styles from './Navbar.module.css' (DO NOT include CSS in this file)
+- Use className={styles['navbar']}, className={styles['navbar__logo']} etc. — bracket notation for kebab-case
+- Export default Navbar component
+` : ''}
+
+${fileSpec.path === 'components/Cta.tsx' ? `
+SPECIFIC CTA.TSX REQUIREMENTS:
+- MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line)
+- Cta is a SECTION component — it is rendered by page.tsx, NOT a page itself.
+- DO NOT import LenisProvider — LenisProvider is ONLY used in app/layout.tsx to wrap the entire app.
+- DO NOT wrap Cta content in <LenisProvider> — this causes duplicate Lenis instances and breaks scroll.
+- Use the shared Lenis instance from context via useLenis() hook: import { useLenis } from '${relPathToHooks}/useLenis'
+- Use CSS Modules: import styles from './Cta.module.css'
+- Use className={styles['cta-section']}, className={styles['cta-button']} etc. — bracket notation
+- Export default Cta component
 ` : ''}
 
 ${fileSpec.path === 'lib/lenis-provider.tsx' ? `
@@ -664,6 +725,21 @@ SPECIFIC LENIS-PROVIDER.TSX REQUIREMENTS:
     lenis.on('scroll', ({ scroll }) => {
       // handler body
     };    // <-- missing the ) — this is a syntax error
+- CRITICAL: The component MUST be a plain function declaration, NOT an arrow function assigned to a variable. DO NOT write: const LenisProvider: React.FC<...> = ({ children }) => { ... });  This is invalid syntax — the trailing  }); is a syntax error.
+  CORRECT:
+    function LenisProvider({ children }: LenisProviderProps) {
+      // ... body ...
+      return (
+        <LenisContext.Provider value={lenis}>
+          <div style={{ height: '100vh', overflowY: 'auto' }}>{children}</div>
+        </LenisContext.Provider>
+      );
+    }
+  WRONG:
+    const LenisProvider: React.FC<LenisProviderProps> = ({ children }) => {
+      // ... body ...
+      return (...);
+    });  // <-- SYNTAX ERROR - extra ) and ;
 ` : ''}
 
 ${fileSpec.path === 'hooks/useReducedMotion.ts' ? `
@@ -677,10 +753,20 @@ SPECIFIC USEREDUCEDMOTION.TS REQUIREMENTS:
 
 ${fileSpec.path === 'hooks/useLenis.ts' ? `
 SPECIFIC USELENIS.TS REQUIREMENTS:
-- Import: import { useContext } from 'react';
-- Import: import { LenisContext } from '../lib/lenis-provider';
-- Export useLenis() hook that returns Lenis instance from context (NAMED export: export const useLenis = ...)
-- IMPORTANT: If context is null, return null (DO NOT throw an error, because it will be null during server-side prerendering).
+- This file MUST import LenisContext from the lenis-provider. Without this import, you will get "Cannot find name 'LenisContext'" build errors.
+- Output EXACTLY this content (copy verbatim, do not add or remove anything):
+
+import { useContext } from 'react';
+import { LenisContext } from '../lib/lenis-provider';
+
+export const useLenis = () => {
+  return useContext(LenisContext);
+};
+
+- DO NOT omit the import of LenisContext. DO NOT add other imports. DO NOT change the export style.
+- IMPORTANT: useLenis() returns the Lenis instance directly (type: Lenis | null). It does NOT return an object.
+  Callers must write:  const lenis = useLenis();        ← CORRECT
+  NOT:                 const { lenis } = useLenis();    ← WRONG - will cause a TypeScript build error
 ` : ''}
 
 ${fileSpec.path === 'tsconfig.json' ? `
@@ -696,6 +782,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
 - exclude: ["node_modules"]
 - Do NOT include "extends": "next/tsconfig.json" (may not exist in generated project)
 - Output a COMPLETE valid JSON object
+- This is a plain JSON config file (NOT a React component). Do NOT include a 'use client' directive anywhere in this file -- it does not need one and including one will break the build.
 ` : ''}
 `;
 
@@ -735,6 +822,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
         '- ALWAYS include ALL imports used in the file! If you use lenis, you MUST import it!\n' +
         '- For React hooks (useEffect, useRef, useState), ALWAYS import them explicitly: import React, { useEffect, useRef, useState } from \'react\';\n' +
         '- If you use the Lenis type in TypeScript (e.g., useRef<Lenis | null>), you MUST import it: import type Lenis from \'lenis\';\n' +
+        '- If you instantiate Lenis (e.g., new Lenis({...})), use a REGULAR import: import Lenis from \'lenis\'; (NOT import type)\n' +
 
         '- PROPS: ALWAYS declare an interface for your props (e.g. interface Props { id?: string }) and accept id in your component signature.\n' +
         '- CRITICAL RULE ABOUT IMPORTS: You MUST NOT write any duplicate imports. If you imported react hooks at the top, DO NOT write \'import { useEffect } from "react";\' again! DO NOT write \'import gsap from "gsap";\' again! ONLY ONE IMPORT PER MODULE IS ALLOWED.\n' +
@@ -780,6 +868,9 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
     // re-deriving them from design tokens — the two sources can diverge in naming conventions.
     let cssModuleStyling = '';
     if (fileSpec.type === 'style' && fileSpec.path.endsWith('.module.css')) {
+      // POST-PROCESS: Fix quoted var() values in CSS modules
+      // Model outputs: font-family: 'var(--font-text-family)';  -> should be: font-family: var(--font-text-family);
+      // This fix must be applied to the generated content later
       const globalsContent = alreadyGenerated.get('app/globals.css') ?? '';
       // Extract all --variable-name: declarations from globals.css
       const definedVars = [...globalsContent.matchAll(/^\s*(--[\w-]+)\s*:/gm)]
@@ -797,6 +888,11 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
 
       cssModuleStyling =
         '\n## CSS MODULE VARIABLE CONSTRAINT (READ CAREFULLY BEFORE WRITING ANY CSS)\n\n' +
+        '⚠️ CRITICAL: This is a plain CSS file (.module.css). It is NOT styled-components, NOT CSS-in-JS, NOT a template literal. DO NOT write ${...} expressions anywhere in this file. CSS does not support JavaScript template literals. Writing `${props => ...}` or any `${...}` in a .css file is a hard syntax error that will crash the build.\n\n' +
+        'VALID: padding: var(--md);\n' +
+        'VALID: color: var(--primary-light);\n' +
+        'INVALID: padding: ${props => props.theme.spacing.md};  ← THIS WILL BREAK THE BUILD\n' +
+        'INVALID: color: ${({ theme }) => theme.colors.primary}; ← THIS WILL BREAK THE BUILD\n\n' +
         'app/globals.css defines EXACTLY these CSS custom properties. No others exist.\n' +
         'AVAILABLE VARIABLES:\n' +
         varList + '\n\n' +
@@ -922,6 +1018,41 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       );
     }
 
+    // Fix globals.css - strip any non-CSS lines (JS identifier text) that the model appends after the :root block.
+    // e.g. the model sometimes appends " LenisProvider, gsapConfig" at the end which is not valid CSS.
+    if (validation.data && validation.data.content && fileSpec.path === 'app/globals.css') {
+      validation.data.content = validation.data.content
+        .split('\n')
+        .filter(line => {
+          const trimmed = line.trim();
+          if (!trimmed) return true; // keep blank lines
+          // Valid CSS lines: contain ':' (property), '{', '}', start with '--', '@', '/*', '*', or are empty
+          const isValidCss = /[:{}\/\*@]/.test(trimmed) || trimmed.startsWith('--') || trimmed === '';
+          // Reject lines that look like bare JS identifiers (letters/commas/spaces only, no CSS chars)
+          const looksLikeJs = /^[A-Za-z_$][\w$,\s]*$/.test(trimmed);
+          return isValidCss || !looksLikeJs;
+        })
+        .join('\n');
+    }
+
+    // Fix globals.css - strip quotes wrapped around var(...) expressions in custom property
+    // values. CSS custom property values must never be quoted -- the model sometimes wraps
+    // them anyway (e.g. --clamp-headline: 'var(--clamp-base)';), which breaks every consumer
+    // of that variable since the quoted string is treated as a literal, not an expression.
+    if (validation.data && validation.data.content && fileSpec.path === 'app/globals.css') {
+      validation.data.content = validation.data.content.replace(
+        /(--[\w-]+\s*:\s*)["']([^"']*var\([^"']*)["']/g,
+        '$1$2'
+      );
+    }
+
+    // Hard override for hooks/useLenis.ts: the 7B model consistently ignores the verbatim
+    // content instruction and omits the LenisContext import. Enforce it deterministically.
+    if (validation.data && validation.data.content && fileSpec.path === 'hooks/useLenis.ts') {
+      if (!validation.data.content.includes('LenisContext')) {
+        validation.data.content = `import { useContext } from 'react';\nimport { LenisContext } from '../lib/lenis-provider';\n\nexport const useLenis = () => {\n  return useContext(LenisContext);\n};\n`;
+      }
+    }
 
     if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
       let importsBlock = '';
@@ -985,7 +1116,26 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
           // Remove export default GSAPInitializer
           .replace(/export\s+default\s+GSAPInitializer;?\n?/g, '')
           // Remove React import if it was only there for GSAPInitializer
-          .replace(/import\s+React(?:,\s*\{[^}]*\})?\s+from\s+'react';?\n?/g, '');
+          .replace(/import\s+React(?:,\s*\{[^}]*\})?\s+from\s+'react';?\n?/g, '')
+          // STRIP ANY 'use client' DIRECTIVE IN ANY FORM (quoted, unquoted, commented, anywhere in file)
+          // This file is a plain TS utility -- it must NEVER have a 'use client' directive
+          .replace(/^\s*['"]?use client['"]?\s*;?\s*\n/gm, '');
+      }
+
+      // STRIP ANY 'use client' DIRECTIVE from other non-component config files
+      // These are plain config/utility files that must NEVER have a 'use client' directive
+      const nonComponentConfigFiles = [
+        'tailwind.config.ts',
+        'postcss.config.js',
+        'next.config.js',
+        'tsconfig.json',
+        'package.json',
+      ];
+      if (nonComponentConfigFiles.some(f => fileSpec.path === f || fileSpec.path.endsWith('/' + f))) {
+        validation.data.content = validation.data.content.replace(
+          /^\s*['"]?use client['"]?\s*;?\s*\n/gm,
+          ''
+        );
       }
     }
 
@@ -1179,6 +1329,26 @@ export default function ${safeName}() {
         );
       }
 
+      // Fix useEffect return function syntax in lenis-provider.tsx
+      // Model generates: return () => { ... });  (extra paren)
+      // Should be:       return () => { ... };    (semicolon, no extra paren)
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        content = content.replace(
+          /return\s*\(\s*\)\s*=>\s*\{([\s\S]*?)\}\s*\);/g,
+          'return () => {$1};'
+        );
+      }
+
+      // Fix gsap.to syntax error in lenis-provider.tsx
+      // Model sometimes writes: gsap.to(window, { duration: 0.6, scrollTo: scroll };
+      // Should be: gsap.to(window, { duration: 0.6, scrollTo: scroll });
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        content = content.replace(
+          /gsap\.to\(([^,]+),\s*\{([^}]+)\}\s*;/g,
+          'gsap.to($1, {$2});'
+        );
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
@@ -1208,6 +1378,55 @@ export default function ${safeName}() {
       content = content.replace(/\{?\s*lenisInstance\s*,?\s*\}?\s*from\s*['"][^'"]*lenis-provider['"];?\n?/g, '');
       content = content.replace(/import\s+\{?\s*lenisInstance\s*\}?\s*from\s*['"][^'"]*['"];?\n?/g, '');
 
+      // Fix 4: optional chaining (?.) on the LHS of an assignment is a syntax error in TypeScript.
+      // e.g.: lenisRef.current?.style.opacity = '1'  =>  if (lenisRef.current) { lenisRef.current.style.opacity = '1'; }
+      // Pattern: <expr>?.<prop> = <value>;
+      content = content.replace(
+        /^(\s*)([\w.[\]]+)\?\.([\w.[\]]+)\s*=\s*(.+?);/gm,
+        (_, indent, obj, prop, value) =>
+          `${indent}if (${obj}) { ${obj}.${prop} = ${value}; }`
+      );
+
+      // Fix 5: ScrollTrigger.kill() does not exist as a static method — the correct API is ScrollTrigger.killAll()
+      content = content.replace(/ScrollTrigger\.kill\(\)/g, 'ScrollTrigger.killAll()');
+
+      // Fix 6: useLenis() returns the Lenis instance directly (Lenis | null), NOT an object { lenis }.
+      // Model sometimes writes: const { lenis } = useLenis()  =>  const lenis = useLenis()
+      content = content.replace(/const\s*\{\s*lenis\s*\}\s*=\s*useLenis\(\)/g, 'const lenis = useLenis()');
+
+      // Fix 7: Model sometimes writes JSX placeholder text instead of real JSX:
+      // e.g. <Gallery component implementation> causes 'Expression expected' syntax error.
+      // Strip all lines containing angle-bracket placeholder text patterns.
+      content = content.replace(/<[A-Z][\w]* component implementation>/gi, '');
+      content = content.replace(/<[A-Z][\w]* content goes here>/gi, '');
+      content = content.replace(/<[A-Z][\w]* placeholder>/gi, '');
+
+      // Fix 8: Model uses ref={xyzRef} in JSX but forgets to declare const xyzRef = useRef(null).
+      // Scan for all ref={varName} usages and inject missing useRef declarations.
+      {
+        const refUsages = [...content.matchAll(/\bref=\{(\w+Ref)\}/g)].map(m => m[1]);
+        const uniqueRefs = [...new Set(refUsages)];
+        const missingRefs = uniqueRefs.filter(refName => !new RegExp(`\\bconst\\s+${refName}\\b`).test(content));
+        if (missingRefs.length > 0) {
+          const declarations = missingRefs.map(r => `  const ${r} = useRef<HTMLDivElement | null>(null);`).join('\n');
+          content = content.replace(/((?:function\s+\w+|const\s+\w+\s*=\s*(?:React\.FC[^=]*=\s*)?\([^)]*\)\s*(?::\s*[^=>{]+)?\s*=>)\s*\{)(\n)/, `$1$2${declarations}\n`);
+          if (!content.includes('useRef')) {
+            content = content.replace(/import\s+React(?:,\s*\{([^}]*)\})?\s+from\s+'react'/, (_m, named) => {
+              const parts = named ? named.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+              if (!parts.includes('useRef')) parts.push('useRef');
+              return `import React, { ${parts.join(', ')} } from 'react'`;
+            });
+            if (!content.includes('useRef')) {
+              content = content.replace(/import\s+\{([^}]*)\}\s+from\s+'react'/, (_m, named) => {
+                const parts = named.split(',').map((s: string) => s.trim()).filter(Boolean);
+                if (!parts.includes('useRef')) parts.push('useRef');
+                return `import { ${parts.join(', ')} } from 'react'`;
+              });
+            }
+          }
+        }
+      }
+
       let missingImports = '';
       if (fileSpec.path !== 'hooks/useLenis.ts' && content.includes('useLenis') && !content.includes("import { useLenis } from")) {
         missingImports += `import { useLenis } from '${relPathToHooks}/useLenis';\n`;
@@ -1215,8 +1434,15 @@ export default function ${safeName}() {
       if (content.includes('ScrollTrigger') && !content.includes("import { ScrollTrigger } from")) {
         missingImports += "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n";
       }
+      // Fix Lenis import: use regular import (not 'import type') when Lenis is used as a value (constructor)
+      // Check if Lenis is used as a value (e.g., 'new Lenis(') - if so, use regular import
+      const usesLenisAsValue = /\bnew\s+Lenis\s*\(/.test(content);
       if (fileSpec.path !== 'lib/lenis-provider.tsx' && /\bLenis\b/.test(content) && !content.includes("import type Lenis") && !content.includes("import Lenis from")) {
-        missingImports += "import type Lenis from 'lenis';\n";
+        if (usesLenisAsValue) {
+          missingImports += "import Lenis from 'lenis';\n";
+        } else {
+          missingImports += "import type Lenis from 'lenis';\n";
+        }
       }
 
       if (missingImports) {
@@ -1551,6 +1777,37 @@ export default ${componentName};
 };`;
     }
 
+    // Fix quoted var() values in CSS module files (all property types, not just --custom)
+    // Model outputs: padding: 'var(--base-unit)' 0; or font-family: 'var(--font-text-family)';
+    if (validation.data && validation.data.content && fileSpec.type === 'style' && fileSpec.path.endsWith('.module.css')) {
+      // Simple single-value: property: 'var(--x)';
+      validation.data.content = validation.data.content.replace(
+        /:\s*['"]var\((--[\w-]+)\)['"]\s*;/g,
+        ': var($1);'
+      );
+      // Multi-value: property: 'var(--x)' other-value;
+      validation.data.content = validation.data.content.replace(
+        /([\.\w-]+\s*:\s*[^;]*)['"]( var\([^'"]+)['"]([\s\w%.,()-]*;)/g,
+        '$1$2$3'
+      );
+    }
+
+    // Strip JS template literal expressions from CSS module files
+    // Model sometimes emits styled-components syntax like: padding: ${props => props.theme.spacing.md};
+    // This is illegal in plain CSS and causes a hard PostCSS build crash.
+    if (validation.data && validation.data.content && fileSpec.type === 'style' && fileSpec.path.endsWith('.module.css')) {
+      // Replace entire property lines containing ${...} expressions with a safe fallback or remove them
+      validation.data.content = validation.data.content.replace(
+        /^(\s*[\w-]+\s*:\s*)\$\{[^}]+\}.*$/gm,
+        (match, prefix) => {
+          // Replace the template literal value with 'inherit' as a safe CSS fallback
+          return prefix + 'inherit;';
+        }
+      );
+      // Also strip any remaining ${...} that appear mid-value (e.g. "padding: 1rem ${props => ...}")
+      validation.data.content = validation.data.content.replace(/\$\{[^}]+\}/g, '');
+    }
+
     // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
@@ -1793,6 +2050,7 @@ export default ${componentName};
       '- MUST START EXACTLY WITH: import type { Config } from \'tailwindcss\';',
       '- MUST DECLARE: const config: Config = { ... }',
       '- MUST END WITH: export default config;',
+      '- This is a plain TypeScript config file (NOT a React component). Do NOT include a \'use client\' directive anywhere in this file -- it does not need one and including one will break the build.',
 
       '',
       'SPECIFIC PACKAGE.JSON REQUIREMENTS:',
