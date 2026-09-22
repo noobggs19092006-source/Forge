@@ -501,12 +501,13 @@ ${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}
     return (
       <LenisProvider>
         <main>
-          <section id="hero"><Hero id="hero" /></section>
-          <section id="cta"><Cta id="cta" /></section>
+          <Hero id="hero" />
+          <Cta id="cta" />
         </main>
       </LenisProvider>
     );
   }
+- DO NOT wrap section components in extra section elements with IDs — the section components themselves accept an id prop and apply it to their root element. Pass the id directly to the component: Hero id="hero" />, NOT section id="hero" Hero id="hero" / section>.
 - DO NOT write loose statements (like variable assignments, function calls) outside the component function.
 - DO NOT write raw HTML/JSX directly at module scope — everything must be inside the return of the component function.
 ` : ''}
@@ -675,9 +676,21 @@ SPECIFIC SECTION COMPONENT REQUIREMENTS (applies to ALL section components in co
 - Section components should focus on their own animation choreography using GSAP/ScrollTrigger.
 - Use the shared Lenis instance from context via useLenis() hook (import { useLenis } from '${relPathToHooks}/useLenis').
 - NEVER wrap section content in <LenisProvider> — this causes duplicate Lenis instances and breaks scroll.
-- ScrollTrigger callbacks must be syntactically valid: each callback (onEnter, onLeave, onEnterBack, onLeaveBack) must be a proper arrow function WITHOUT extra closing parens/braces.
-  - CORRECT: onEnter: () => { gsap.to(...); }
-  - WRONG: onEnter: () => { gsap.to(...); ); }
+- ScrollTrigger callbacks must use this EXACT template structure — copy verbatim and only change the selector/target and animation properties:
+
+  ScrollTrigger.create({
+    trigger: '.your-selector',
+    start: 'top center',
+    end: 'bottom top',
+    onEnter: () => gsap.to('.your-target', { opacity: 1, duration: gsapConfig.defaultDuration }),
+    onLeaveBack: () => gsap.to('.your-target', { opacity: 0, duration: gsapConfig.defaultDuration }),
+  });
+
+  Do NOT add extra closing parentheses or braces beyond this exact structure. The pattern is:
+  - onEnter: () => gsap.to('.target', { ... })
+  - onLeaveBack: () => gsap.to('.target', { ... })
+  - No extra closing parentheses or braces after the gsap.to call.
+  - Do NOT write: onEnter: () => { gsap.to(...); }) or onEnter: () => { gsap.to(...); });
 - ALWAYS declare an interface for props (e.g., interface Props { id?: string }) and accept id in component signature.
 ` : ''}
 
@@ -1746,6 +1759,27 @@ export default ${componentName};
       validation.data.content = validation.data.content.replace(
         /return\s*\(\s*<([A-Z][a-zA-Z0-9]*\.Provider[^>]*>)(\s*\n\s*)div\s+/g,
         'return ($1$2<div '
+      );
+    }
+
+    // Fix invalid Lenis options in section components
+    // Invalid: direction: 'vertical' - use orientation: 'vertical' and gestureOrientation: 'vertical'
+    // Invalid: spreading gsapConfig into Lenis constructor - gsapConfig has GSAP properties, not Lenis options
+    if (validation.data && validation.data.content && fileSpec.path.startsWith('components/') && fileSpec.path.endsWith('.tsx')) {
+      // Fix direction -> orientation + gestureOrientation
+      validation.data.content = validation.data.content.replace(
+        /direction\s*:\s*['"]vertical['"]/g,
+        "orientation: 'vertical', gestureOrientation: 'vertical'"
+      );
+      // Remove spread of gsapConfig in Lenis constructor
+      validation.data.content = validation.data.content.replace(
+        /new\s+Lenis\(\s*\{[^}]*\.\.\.gsapConfig[^}]*\}\s*\)/g,
+        "new Lenis({ duration: gsapConfig.defaultDuration, easing: gsapConfig.defaultEasing, staggerInterval: gsapConfig.staggerInterval, orientation: 'vertical', gestureOrientation: 'vertical', smoothWheel: true })"
+      );
+      // Fix any remaining direction in Lenis constructor
+      validation.data.content = validation.data.content.replace(
+        /new\s+Lenis\(\s*\{([^}]*)direction\s*:\s*['"]vertical['"]([^}]*)\}\s*\)/g,
+        "new Lenis({$1orientation: 'vertical', gestureOrientation: 'vertical'$2})"
       );
     }
 
