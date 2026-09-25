@@ -1495,6 +1495,11 @@ export default function ${safeName}() {
         );
       }
 
+      // Strip hallucinated module-scope useRef in lib/lenis-provider.tsx (caused by previous missingRef regex)
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        content = content.replace(/^const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '');
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");

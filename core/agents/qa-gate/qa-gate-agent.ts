@@ -768,7 +768,7 @@ return imported;
     }
     
     // Check for multiple LenisProvider components
-    const lenisProviderCount = (allContent.match(/<\s*LenisProvider\b/g) || []).length;
+    const lenisProviderCount = (allContent.match(/<LenisProvider[\s>]/g) || []).length;
     if (lenisProviderCount > 1) {
       checks.push({
         name: 'lenis-provider-single',
