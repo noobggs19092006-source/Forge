@@ -520,9 +520,9 @@ SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
 
 ${fileSpec.path === 'app/page.tsx' ? `
 SPECIFIC APP/PAGE.TSX REQUIREMENTS:
+- page.tsx must NOT import or render LenisProvider — it is already provided once in app/layout.tsx and must never be duplicated.
 - MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (WITH SINGLE QUOTES, on its own line).
 - This file lives at: ${fileSpec.path}
-- EXACT import for LenisProvider (copy verbatim): import LenisProvider from '${relPathToLib}/lenis-provider'
 - EXACT import path prefix for components (copy verbatim): import Hero from '${relPathToComponents}/Hero'
 - DO NOT use '../lib', '@/lib', or any other path variant — use ONLY the exact path shown above.
 ${availableComponentNames.length > 0 ? `- AVAILABLE COMPONENTS (only import from this list — never invent a name not on it):
@@ -1497,7 +1497,27 @@ export default function ${safeName}() {
 
       // Strip hallucinated module-scope useRef in lib/lenis-provider.tsx (caused by previous missingRef regex)
       if (fileSpec.path === 'lib/lenis-provider.tsx') {
-        content = content.replace(/^const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '');
+        const componentMatch = content.match(/function\s+LenisProvider|const\s+LenisProvider\s*=/);
+        if (componentMatch && componentMatch.index !== undefined) {
+          const before = content.substring(0, componentMatch.index);
+          const after = content.substring(componentMatch.index);
+          content = before.replace(/^\s*const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '') + after;
+        } else {
+          content = content.replace(/^\s*const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '');
+        }
+      }
+
+      // Remove redundant LenisProvider wrapper from app/page.tsx
+      if (fileSpec.path === 'app/page.tsx') {
+        content = content.replace(/import\s+LenisProvider\s+from[^;]+;?\n?/g, '');
+        content = content.replace(/<\/?LenisProvider[^>]*>/g, '');
+      }
+
+      // Fix bare type annotations leaking out as statements (e.g. staggerInterval: number;)
+      if (fileSpec.path.endsWith('.ts') || fileSpec.path.endsWith('.tsx')) {
+        content = content.replace(/^(\s*)staggerInterval\s*:\s*number\s*;/gm, '$1const staggerInterval = 0.08;');
+        // Generic fallback for any other bare identifier: type;
+        content = content.replace(/^(\s*)[a-zA-Z_$][\w$]*\s*:\s*(?:string|number|boolean)\s*;/gm, '');
       }
 
       // Convert hallucinatory default imports to named imports
