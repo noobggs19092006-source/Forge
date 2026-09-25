@@ -74,8 +74,9 @@ export class OllamaAdapter implements ProviderAdapter {
     ];
 
     // Build options object
-    const options: { temperature?: number, num_ctx?: number, repeat_penalty?: number } = { 
-      num_ctx: 4096,
+    const options: { temperature?: number, num_ctx?: number, num_predict?: number, repeat_penalty?: number } = { 
+      num_ctx: 8192,
+      num_predict: params.maxTokens ?? 4096,
       repeat_penalty: 1.2
     };
     if (params.temperature !== undefined) {

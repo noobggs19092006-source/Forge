@@ -200,28 +200,74 @@ async function runFixtureWithTimeout(pipeline, fixture, outputDir) {
 }
 
 async function main() {
+  // Build dynamic fallback order from available API keys
+  const providerPriority = [
+    { key: 'GROQ_API_KEY', name: 'groq', label: 'Groq (llama-3.3-70b-versatile)', model: 'llama-3.3-70b-versatile' },
+    { key: 'CEREBRAS_API_KEY', name: 'cerebras', label: 'Cerebras (gpt-oss-120b)', model: 'gpt-oss-120b' },
+    { key: 'OPENROUTER_API_KEY', name: 'openrouter', label: 'OpenRouter (google/gemma-4-31b-it:free)', model: 'google/gemma-4-31b-it:free' },
+    { key: 'GEMINI_API_KEY', name: 'gemini', label: 'Gemini (gemini-2.5-flash)', model: 'gemini-2.5-flash' },
+    { key: 'NVIDIA_API_KEY', name: 'nvidia-nim', label: 'NVIDIA NIM (nvidia/llama-3.1-nemotron-70b-instruct)', model: 'nvidia/llama-3.1-nemotron-70b-instruct' },
+  ];
+  
+  const availableProviders = providerPriority
+    .filter(p => process.env[p.key] && process.env[p.key].trim().length > 0)
+    .map(p => ({ name: p.name, label: p.label, model: p.model }));
+  
+  // Build model mapping: provider name -> that provider's correct model ID
+  const modelMap = {};
+  for (const p of availableProviders) {
+    modelMap[p.name] = p.model;
+  }
+  // Ollama fallback
+  modelMap['ollama'] = 'qwen2.5-coder:7b';
+  
+  const fallbackOrder = availableProviders.map(p => p.name);
+  fallbackOrder.push('ollama'); // Ollama always last as guaranteed fallback
+  
+  const codegenFallbackOrder = [...fallbackOrder];
+  
+  const providerLabels = availableProviders.map(p => p.label).join(' → ');
+  const bannerProvider = providerLabels ? `${providerLabels} → Ollama (fallback)` : 'Ollama (local qwen2.5-coder:7b)';
+  
   console.log('╔═══════════════════════════════════════════════╗');
   console.log('║  FORGE REGRESSION TEST SUITE                  ║');
-  console.log('║  Provider: Groq (hardcoded for speed)         ║');
+  console.log(`║  Provider: ${bannerProvider.padEnd(40)}║`);
   console.log('║  Timeout: 10 minutes per fixture              ║');
   console.log('╚═══════════════════════════════════════════════╝');
 
-  const ollamaKey = process.env['GROQ_API_KEY'];
-  if (!ollamaKey) {
-  }
-
-  // Force Groq for regression suite
   const config = loadConfig();
   config.skipBuildVerification = false;
-  config.routing.fallbackOrder = ['ollama'];
-  config.routing.codegenFallbackOrder = ['ollama'];
+  config.routing.fallbackOrder = fallbackOrder;
+  config.routing.codegenFallbackOrder = codegenFallbackOrder;
   
-  config.codegenMaxConcurrency = 1; config.codegenInterRequestDelayMs = 0;
+  // Set stages to use cloud tier when cloud providers available, local otherwise
+  const useCloud = availableProviders.length > 0;
+  const stageTier = useCloud ? 'cloud' : 'local';
   
-  // On Windows, Node.js resolves 'localhost' to ::1 (IPv6) while Ollama binds 127.0.0.1 (IPv4).
-  // Explicitly use 127.0.0.1 to avoid fetch failures.
+  // Per-provider model selection: use that provider's own model ID
+  // First available provider in fallback order wins for its tier
+  const firstProvider = fallbackOrder[0];
+  const codegenModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'qwen2.5-coder:7b';
+  const otherStageModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'qwen2.5-coder:7b';
+  
+  config.routing.stages = {
+    intake: { tier: stageTier, model: otherStageModel },
+    architect: { tier: stageTier, model: otherStageModel },
+    'design-brain': { tier: stageTier, model: otherStageModel },
+    'motion-brain': { tier: stageTier, model: otherStageModel },
+    codegen: { tier: stageTier, model: codegenModel },
+    'qa-gate': { tier: stageTier, model: otherStageModel },
+    critic: { tier: stageTier, model: otherStageModel },
+  };
+  
+  // Ensure Ollama config exists as final fallback
   if (!config.routing.ollama) config.routing.ollama = {};
   config.routing.ollama.baseUrl = 'http://127.0.0.1:11434';
+  config.routing.ollama.defaultModel = 'qwen2.5-coder:7b';
+  
+  // Codegen concurrency: higher for cloud providers with rate-limit handling
+  config.codegenMaxConcurrency = useCloud ? 3 : 1;
+  config.codegenInterRequestDelayMs = useCloud ? 0 : 0;
   
   
   

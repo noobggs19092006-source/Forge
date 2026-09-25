@@ -155,8 +155,7 @@ export class ForgePipeline {
       // ── Stage 1: Intake ──
       const brief = await this.runStage('intake', stageTimings, stageAttempts, async () => {
         const intakeProvider = this.router.getProviderForStage('intake');
-        const intakeModel = this.router.getModelForStage('intake');
-        const intakeAgent = await createIntakeAgent(intakeProvider, intakeModel);
+        const intakeAgent = await createIntakeAgent(intakeProvider, undefined);
         const result = await intakeAgent.execute({ rawPrompt: prompt });
         return result.output;
       });
@@ -174,18 +173,73 @@ export class ForgePipeline {
       // ── Stage 2: Architect ──
       const sitemap = await this.runStage('architect', stageTimings, stageAttempts, async () => {
         const provider = this.router.getProviderForStage('architect');
-        const model = this.router.getModelForStage('architect');
-        const agent = new ArchitectAgent(provider, model);
+        // Don't pass a model override — let each provider in the fallback chain use its own default model
+        const agent = new ArchitectAgent(provider, undefined);
         const result = await agent.execute(brief);
         return result.output;
       });
+      
+      // ── Post-Architect Scope Validation: enforce minimal/simple scope ────────────────
+      // Cloud models ignore "don't invent pages" soft prompts. Hard-constrain here.
+      const briefDesc = (brief.description || '').toLowerCase();
+      const briefMood = brief.mood?.map(m => m.toLowerCase()) ?? [];
+      const isMinimal = 
+        brief.scope === 'section' || 
+        brief.scope === 'page' ||
+        briefDesc.includes('minimal') ||
+        briefDesc.includes('simple') ||
+        briefDesc.includes('landing page') ||
+        briefDesc.includes('single page') ||
+        briefDesc.includes('one page') ||
+        briefMood.includes('minimal') ||
+        briefMood.includes('simple');
+      
+      if (isMinimal) {
+        // Cap at 1 page, max 4 sections (hero + 2-3 content + cta/footer)
+        if (sitemap.pages.length > 1) {
+          this.events.emit('stage:start', `Scope guard: truncating ${sitemap.pages.length} pages → 1 (minimal scope detected)`);
+          sitemap.pages = sitemap.pages.slice(0, 1);
+        }
+        const page = sitemap.pages[0];
+        if (page && page.sections.length > 4) {
+          this.events.emit('stage:start', `Scope guard: truncating ${page.sections.length} sections → 4 (minimal scope)`);
+          // Keep hero, then prioritize sections mentioned in brief, then cta
+          const mentionedTypes = new Set<string>();
+          if (briefDesc.includes('hero')) mentionedTypes.add('hero');
+          if (briefDesc.includes('about')) mentionedTypes.add('about');
+          if (briefDesc.includes('portfolio') || briefDesc.includes('gallery') || briefDesc.includes('work')) mentionedTypes.add('gallery');
+          if (briefDesc.includes('contact') || briefDesc.includes('form')) mentionedTypes.add('contact');
+          if (briefDesc.includes('cta') || briefDesc.includes('call to action')) mentionedTypes.add('cta');
+          if (briefDesc.includes('feature')) mentionedTypes.add('features');
+          if (briefDesc.includes('testimonial')) mentionedTypes.add('testimonials');
+          if (briefDesc.includes('pricing')) mentionedTypes.add('pricing');
+          if (briefDesc.includes('team')) mentionedTypes.add('team');
+          if (briefDesc.includes('faq')) mentionedTypes.add('faq');
+          if (briefDesc.includes('blog')) mentionedTypes.add('blog-list');
+          
+          const heroSection = page.sections.find(s => s.contentType === 'hero');
+          const otherSections = page.sections.filter(s => s.contentType !== 'hero');
+          // Prioritize mentioned types, then keep original order
+          const prioritized = [...otherSections].sort((a, b) => {
+            const aMentioned = mentionedTypes.has(a.contentType) ? 0 : 1;
+            const bMentioned = mentionedTypes.has(b.contentType) ? 0 : 1;
+            if (aMentioned !== bMentioned) return aMentioned - bMentioned;
+            return page.sections.indexOf(a) - page.sections.indexOf(b);
+          });
+          page.sections = heroSection ? [heroSection, ...prioritized.slice(0, 3)] : prioritized.slice(0, 4);
+        }
+        // Force minimal shared layout
+        sitemap.sharedLayout = sitemap.sharedLayout || { navType: 'minimal', footerType: 'minimal', persistentElements: [] };
+        sitemap.sharedLayout.navType = 'minimal';
+        sitemap.sharedLayout.footerType = 'minimal';
+      }
+      
       this.memory.set('sitemap', sitemap);
 
       // ── Stage 3: Design-Brain ──
       const designTokens = await this.runStage('design-brain', stageTimings, stageAttempts, async () => {
         const provider = this.router.getProviderForStage('design-brain');
-        const model = this.router.getModelForStage('design-brain');
-        const agent = new DesignBrainAgent(provider, model);
+        const agent = new DesignBrainAgent(provider, undefined);
         const result = await agent.execute({ brief, sitemap });
         return result.output;
       });
@@ -195,8 +249,7 @@ export class ForgePipeline {
       const allSections = sitemap.pages.flatMap((p: Page) => p.sections);
       const motionPlan = await this.runStage('motion-brain', stageTimings, stageAttempts, async () => {
         const provider = this.router.getProviderForStage('motion-brain');
-        const model = this.router.getModelForStage('motion-brain');
-        const agent = new MotionBrainAgent(provider, model);
+        const agent = new MotionBrainAgent(provider, undefined);
         const result = await agent.execute({ designTokens, sections: allSections, sitemap });
         return result.output;
       });
@@ -217,8 +270,7 @@ export class ForgePipeline {
         stageAttempts,
         async () => {
           const provider = this.router.getProviderForStage('codegen');
-          const model = this.router.getModelForStage('codegen');
-          const agent = new CodegenAgent(provider, model, {
+          const agent = new CodegenAgent(provider, undefined, {
             interRequestDelayMs: this.config.codegenInterRequestDelayMs,
             maxRetryPasses: this.config.codegenMaxRetryPasses ?? 2,
             maxConcurrency: this.config.codegenMaxConcurrency ?? 3,
@@ -331,6 +383,25 @@ export class ForgePipeline {
           for (const [pagePath, pageQaReport] of parallelReports.entries()) {
             pageQaReports.set(pagePath, pageQaReport);
 
+            // Log full ticket details for failed checks
+            if (!pageQaReport.overallPass) {
+              console.log(`\n========== QA-GATE FAILURES for ${pagePath} (${qaMode} mode) ==========`);
+              for (const check of pageQaReport.checks) {
+                if (!check.passed && (check.severity === 'critical' || check.severity === 'serious')) {
+                  console.log(`  ❌ [${check.severity.toUpperCase()}] ${check.name} (${check.category})`);
+                  console.log(`     File: ${check.file ?? 'N/A'}`);
+                  console.log(`     Details: ${check.details}`);
+                }
+              }
+              for (const ticket of pageQaReport.fixTickets) {
+                console.log(`  🎫 FIX TICKET: ${ticket.file}`);
+                console.log(`     Issue: ${ticket.issue}`);
+                console.log(`     Required Change: ${ticket.requiredChange}`);
+                console.log(`     Related Check: ${ticket.relatedCheck}`);
+              }
+              console.log(`==========================================================\n`);
+            }
+
             this.events.emit('qa:check', `QA Gate [${qaMode}] for ${pagePath}: ${pageQaReport.overallPass ? 'PASSED ✓' : `FAILED (${pageQaReport.fixTickets.length} fix tickets)`}`, {
               stage: 'qa-gate',
               data: { page: pagePath, passed: pageQaReport.overallPass, tickets: pageQaReport.fixTickets.length, mode: qaMode },
@@ -437,8 +508,7 @@ export class ForgePipeline {
       for (let criticAttempt = 0; criticAttempt <= this.config.maxCriticRetries; criticAttempt++) {
         resolvedCriticReport = await this.runStage<CriticReport>('critic', stageTimings, stageAttempts, async () => {
           const provider = this.router.getProviderForStage('critic');
-          const model = this.router.getModelForStage('critic');
-          const agent = new CriticAgent(provider, model);
+          const agent = new CriticAgent(provider, undefined);
           const result = await agent.execute({
             brief: {
               name: brief.name,
@@ -473,8 +543,7 @@ export class ForgePipeline {
 
           generatedCode = await this.runStage('codegen', stageTimings, stageAttempts, async () => {
             const provider = this.router.getProviderForStage('codegen');
-            const model = this.router.getModelForStage('codegen');
-            const agent = new CodegenAgent(provider, model, {
+            const agent = new CodegenAgent(provider, undefined, {
               interRequestDelayMs: this.config.codegenInterRequestDelayMs,
               maxRetryPasses: this.config.codegenMaxRetryPasses ?? 3,
               checkpointDir: outputDir,
@@ -555,8 +624,7 @@ export class ForgePipeline {
     eventEmitter?: (event: PipelineEventType, message: string) => void
   ): Promise<GeneratedCode> {
     const provider = this.router.getProviderForStage('codegen');
-    const model = this.router.getModelForStage('codegen');
-    const agent = new CodegenAgent(provider, model, {
+    const agent = new CodegenAgent(provider, undefined, {
       interRequestDelayMs: this.config.codegenInterRequestDelayMs,
       maxRetryPasses: this.config.codegenMaxRetryPasses ?? 3,
       checkpointDir: outputDir,

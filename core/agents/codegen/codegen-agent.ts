@@ -6,7 +6,7 @@ import type { DesignTokens, MotionPlan, Sitemap } from '../../schemas/index.js';
 import { formatA11yRulesForPrompt } from '../../knowledge/a11y-rules.js';
 import { CodegenCheckpoint } from './codegen-checkpoint.js';
 import type { PassResult } from './codegen-checkpoint.js';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 /**
@@ -314,13 +314,30 @@ ${JSON.stringify(input.motionPlan, null, 2)}`;
 
     // Section components for each unique section type across target pages
     const uniqueSections = new Map<string, { contentType: string; purpose: string }>();
+
+    // Mapping for section IDs that don't follow the standard naming convention
+    const sectionIdToComponentName: Record<string, string> = {
+      'cta-section': 'Cta',
+      // Add more mappings as needed
+    };
+
     for (const page of targetPages) {
       for (const section of page.sections) {
         // Normalize section ID to a component name
-        const componentName = section.id
+        let componentName = section.id
           .split('-')
           .map(w => w.charAt(0).toUpperCase() + w.slice(1))
           .join('');
+
+        // Apply known mappings for non-standard section IDs
+        const sectionIdToComponentName: Record<string, string> = {
+          'cta-section': 'Cta',
+          // Add more mappings as needed
+        };
+        if (sectionIdToComponentName[section.id]) {
+          componentName = sectionIdToComponentName[section.id]!;
+        }
+
         const componentPath = `components/${componentName}.tsx`;
 
         if (!uniqueSections.has(componentPath)) {
@@ -402,6 +419,27 @@ ${JSON.stringify(input.motionPlan, null, 2)}`;
         if (!availableComponentNames.includes(name)) availableComponentNames.push(name);
       }
     }
+
+    // SPECIFIC HERO.MODULE.CSS REQUIREMENTS (defined as constant to avoid template literal nesting issues)
+    const HERO_MODULE_CSS_REQUIREMENTS =
+      'SPECIFIC HERO.MODULE.CSS REQUIREMENTS:\n' +
+      '- This is a CSS Module file for the Hero section component.\n' +
+      '- Use ONLY CSS custom properties from globals.css (via var(--token-name)).\n' +
+      '- DO NOT use any external image URLs (no url(\'...\'), no data URIs, no external links).\n' +
+      '- FORGE DOES NOT GENERATE IMAGES. There are NO real image assets in this pipeline.\n' +
+      '- When no real image asset exists (which is ALWAYS the case in this pipeline), use a CSS gradient background with the locked design tokens:\n' +
+      '  .hero-background {\n' +
+      '    background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));\n' +
+      '    position: absolute;\n' +
+      '    top: 0; left: 0; width: 100%; height: 100vh;\n' +
+      '  }\n' +
+      '- DO NOT use url(\'your-background-url.jpg\'), url(\'placeholder\'), url(\'insert-\'), url(\'TODO\'), data URIs, or ANY external image references.\n' +
+      '- Use ONLY design tokens from globals.css: var(--primary-light), var(--primary-dark), var(--accent-light), var(--accent-dark), var(--surface-light), var(--surface-dark), var(--on-surface-light), var(--on-surface-dark).\n' +
+      '- Use CSS gradients, solid colors, or CSS patterns -- NO external image references.\n' +
+      '- Use var(--token-name) for ALL colors, spacing, typography.\n' +
+      '- DO NOT use :root selector -- CSS Modules scope styles automatically.\n' +
+      '- DO NOT invent variable names not in globals.css.\n' +
+      '- The matching .tsx file (Hero.tsx) is already in your file list as a dependency -- write real, complete styles into this file, don\'t leave it as a stub.';
 
     const singleFilePrompt = this.formatInput(input) + dependencyContext + `
 
@@ -497,12 +535,13 @@ ${availableComponentNames.map(n => `  * import ${n} from '${relPathToComponents}
 - CRITICAL: This file does NOT import a CSS module. NEVER reference \`styles\` in any form. Use plain string className values.
 - CRITICAL: NEVER write a local implementation (const X = () => ...) of any component you have already imported — duplicate-identifier error.
 - CRITICAL: page.tsx is a React component that RETURNS JSX. Output a valid function component:
+  - CRITICAL: page.tsx is a React component that RETURNS JSX. Output a valid function component:
   export default function HomePage() {
     return (
       <LenisProvider>
         <main>
           <Hero id="hero" />
-          <Cta id="cta" />
+          <Cta id="cta-section" />
         </main>
       </LenisProvider>
     );
@@ -631,7 +670,6 @@ import useReducedMotion from '${relPathToHooks}/useReducedMotion';
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { gsapConfig } from '${relPathToLib}/gsap-config';
 
 CRITICAL RULES:
 - 'use client'; is a STRING on line 1 — NOT a comment (// use client is WRONG)
@@ -640,9 +678,14 @@ CRITICAL RULES:
 - useReducedMotion is a DEFAULT import (no curly braces): import useReducedMotion from '${relPathToHooks}/useReducedMotion'
 - useReducedMotion RETURNS A BOOLEAN, NOT AN ARRAY: const prefersReducedMotion = useReducedMotion(); (NOT const [isReducedMotion] = useReducedMotion())
 - useLenis is a NAMED import (with curly braces): import { useLenis } from '${relPathToHooks}/useLenis'
-- Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values
+- Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values (imported via section component requirements below)
 - Export default Hero component at the bottom
+- ALWAYS declare an interface for props (e.g., interface Props { id?: string }) and accept id in component signature
+- Apply the id prop to the root element: <div className={styles.heroContainer} id={id}>
+- CRITICAL: Lenis easing must be a FUNCTION, not a string. Use gsap.parseEase(gsapConfig.defaultEasing) or define a custom easing function. NEVER pass gsapConfig.defaultEasing directly to Lenis — it expects a function, not a string.
 ` : ''}
+
+${fileSpec.path === 'components/Hero.module.css' ? HERO_MODULE_CSS_REQUIREMENTS : ''}
 
 ${fileSpec.path.endsWith('postcss.config.js') ? `
 SPECIFIC POSTCSS.CONFIG.JS REQUIREMENTS:
@@ -691,6 +734,10 @@ SPECIFIC SECTION COMPONENT REQUIREMENTS (applies to ALL section components in co
   - onLeaveBack: () => gsap.to('.target', { ... })
   - No extra closing parentheses or braces after the gsap.to call.
   - Do NOT write: onEnter: () => { gsap.to(...); }) or onEnter: () => { gsap.to(...); });
+- CRITICAL: The trigger value must be a SINGLE STRING without line breaks. NEVER write:
+  trigger: '.hero-title,
+  .hero-subtitle'
+  ALWAYS write: trigger: '.hero-title, .hero-subtitle'
 - ALWAYS declare an interface for props (e.g., interface Props { id?: string }) and accept id in component signature.
 ` : ''}
 
@@ -714,6 +761,10 @@ SPECIFIC CTA.TSX REQUIREMENTS:
 - Use the shared Lenis instance from context via useLenis() hook: import { useLenis } from '${relPathToHooks}/useLenis'
 - Use CSS Modules: import styles from './Cta.module.css'
 - Use className={styles['cta-section']}, className={styles['cta-button']} etc. — bracket notation
+- Import gsap from 'gsap' for animations
+- Import { ScrollTrigger } from 'gsap/ScrollTrigger' for scroll animations
+- Use gsapConfig.defaultDuration, gsapConfig.defaultEasing, gsapConfig.staggerInterval for animation values (imported via section component requirements below)
+- In useEffect cleanup, use: return () => ScrollTrigger.killAll(); (NOT ScrollTrigger.kill)
 - Export default Cta component
 ` : ''}
 
@@ -1017,6 +1068,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       validation.data.content = validation.data.content.replace(/turbopack:\s*\{[^}]+\},\s*/g, '');
       validation.data.content = validation.data.content.replace(/,\s*turbopack:\s*\{[^}]+\}/g, '');
       validation.data.content = validation.data.content.replace(/turbopack:\s*\{[^}]+\}/g, '');
+      // The experimental.turbo key is invalid in Next.js 15+; removed forced injection.
     }
 
     // Fix globals.css - normalize negative OKLCH angles to positive (0-360)
@@ -1062,8 +1114,14 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
     // Hard override for hooks/useLenis.ts: the 7B model consistently ignores the verbatim
     // content instruction and omits the LenisContext import. Enforce it deterministically.
     if (validation.data && validation.data.content && fileSpec.path === 'hooks/useLenis.ts') {
-      if (!validation.data.content.includes('LenisContext')) {
+      if (!validation.data.content.includes('LenisContext') || !validation.data.content.includes("from '../lib/lenis-provider'")) {
         validation.data.content = `import { useContext } from 'react';\nimport { LenisContext } from '../lib/lenis-provider';\n\nexport const useLenis = () => {\n  return useContext(LenisContext);\n};\n`;
+      } else if (!validation.data.content.includes("from '../lib/lenis-provider'")) {
+        // Fix wrong import path
+        validation.data.content = validation.data.content.replace(
+          /import\s+\{?\s*LenisContext\s*\}?\s+from\s+['"][^'"]+['"]/,
+          "import { LenisContext } from '../lib/lenis-provider'"
+        );
       }
     }
 
@@ -1076,6 +1134,62 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       if (importsBlock) {
         const uniqueImports = Array.from(new Set(importsBlock.split(/\r?\n/).map(s => s.trim()).filter(Boolean))).join('\n');
         validation.data.content = uniqueImports + '\n\n' + validation.data.content.trimStart();
+      }
+    }
+
+    // Generic post-processing safety net: merge duplicate named imports from the same module path
+    // e.g., two separate "import { gsapConfig } from '../lib/gsap-config'" and "import { gsapConfig, setupGSAP } from '../lib/gsap-config'"
+    // become "import { gsapConfig, setupGSAP } from '../lib/gsap-config'"
+    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
+      const importRegex = /^import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"];\s*$/gm;
+      const importsByModule = new Map<string, Set<string>>();
+      let match: RegExpExecArray | null;
+      while ((match = importRegex.exec(validation.data.content)) !== null) {
+        const namedImports = match[1]!.split(',').map(s => s.trim()).filter(Boolean);
+        const modulePath = match[2]!;
+        if (!importsByModule.has(modulePath)) {
+          importsByModule.set(modulePath, new Set());
+        }
+        for (const ni of namedImports) {
+          importsByModule.get(modulePath)!.add(ni);
+        }
+      }
+      if (importsByModule.size > 0) {
+        // Remove all named imports from these modules
+        let content = validation.data.content;
+        for (const modulePath of importsByModule.keys()) {
+          content = content.replace(
+            new RegExp(`^import\\s+\\{[^}]+\\}\\s+from\\s+['"]${modulePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['"];\\s*$`, 'gm'),
+            ''
+          );
+        }
+        // Re-insert merged imports at the top of the import block
+        const mergedImports: string[] = [];
+        for (const [modulePath, namedSet] of importsByModule.entries()) {
+          const sortedNamed = Array.from(namedSet).sort();
+          mergedImports.push(`import { ${sortedNamed.join(', ')} } from '${modulePath}';`);
+        }
+        // Find where to insert (after 'use client' if present, otherwise at start)
+        let insertIdx = 0;
+        const lines = content.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i]?.trim().startsWith("'use client'") || lines[i]?.trim().startsWith('"use client"')) {
+            insertIdx = i + 1;
+            break;
+          }
+        }
+        // If no 'use client', insert at first non-import line or at top
+        if (insertIdx === 0) {
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i]?.trim().startsWith('import ')) {
+              insertIdx = i;
+            } else if (lines[i]?.trim() && insertIdx > 0) {
+              break;
+            }
+          }
+        }
+        lines.splice(insertIdx, 0, ...mergedImports, '');
+        validation.data.content = lines.join('\n').replace(/\n{3,}/g, '\n\n');
       }
     }
 
@@ -1170,7 +1284,7 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
     // skipped a React wrapper entirely and emitted a literal <html> document)
     if (validation.data && validation.data.content && fileSpec.path === 'app/layout.tsx') {
       const content = validation.data.content.trim();
-      if (content.startsWith('<html')) {
+      if (content.startsWith('<html') || content.includes('\n<html') || /import\s+Lenis\s+from\s+['"]\.\.\/lib\/lenis-provider['"]/.test(content)) {
         // Extract body content if present
         let innerContent = content;
         const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -1362,6 +1476,25 @@ export default function ${safeName}() {
         );
       }
 
+      // Fix window.addEventListener missing closing paren: `...true };` -> `...true });`
+      // Model sometimes writes: window.addEventListener('scroll', handler, { passive: true };
+      // Should be: window.addEventListener('scroll', handler, { passive: true });
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        content = content.replace(
+          /window\.addEventListener\(([^)]+),\s*\{[^}]+passive\s*:\s*true\s*\};\s*$/gm,
+          (match) => match.replace(/;\s*$/, ');')
+        );
+      }
+
+      // Fix GSAP numeric values with CSS units - they must be strings in object syntax
+      // e.g., x: -2rem -> x: '-2rem', y: 100px -> y: '100px'
+      if (fileSpec.path.endsWith('.tsx')) {
+        content = content.replace(
+          /\b(x|y|rotation|scaleX|scaleY|xPercent|yPercent)\s*:\s*(-?\d+(?:\.\d+)?)(rem|px|%|em|vh|vw)\b/g,
+          "$1: '$2$3'"
+        );
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
@@ -1385,6 +1518,13 @@ export default function ${safeName}() {
         });
       }
 
+      // Fix: Strip wrong-path useReducedMotion imports (e.g., from gsap-config)
+      // useReducedMotion must come from hooks/useReducedMotion
+      content = content.replace(
+        /import\s*\{[^}]*useReducedMotion[^}]*\}\s*from\s*['"](?!\.\.\/hooks\/useReducedMotion)[^'"]+['"];?\n?/g,
+        ''
+      );
+
       // Fix 3: Strip hallucinated lenisInstance named import from lenis-provider
       // (lenis-provider only exports LenisContext and a default LenisProvider — no lenisInstance)
       content = content.replace(/,\s*\{?\s*lenisInstance\s*\}?/g, '');
@@ -1398,6 +1538,46 @@ export default function ${safeName}() {
         /^(\s*)([\w.[\]]+)\?\.([\w.[\]]+)\s*=\s*(.+?);/gm,
         (_, indent, obj, prop, value) =>
           `${indent}if (${obj}) { ${obj}.${prop} = ${value}; }`
+      );
+
+      // Fix 4b: lenisRef.current?.raf() without arguments - Lenis raf() requires a callback
+      // Replace lenisRef.current?.raf() with lenisRef.current?.raf(() => {})
+      content = content.replace(
+        /(\w+Ref\.current)\?\.\s*raf\(\s*\)/g,
+        '$1?.raf(() => {})'
+      );
+
+      // Fix 4c: Fix malformed ScrollTrigger trigger strings that span multiple lines
+      // e.g., trigger: '.hero-title,\n  .hero-subtitle' -> trigger: '.hero-title, .hero-subtitle'
+      // Also handles cases where the trigger string is split across lines without proper quotes
+      content = content.replace(
+        /trigger:\s*'([^']*?)'\s*\n\s*'([^']*?)'/g,
+        "trigger: '$1$2'"
+      );
+      content = content.replace(
+        /trigger:\s*"([^"]*?)"\s*\n\s*"([^"]*?)"/g,
+        'trigger: "$1$2"'
+      );
+      // Fix: multiline trigger without proper quotes on each line
+      // trigger: '.hero-title,\n  hero-subtitle,\n  hero-button' -> trigger: '.hero-title, hero-subtitle, hero-button'
+      content = content.replace(
+        /trigger:\s*'([^']*?(?:\n\s*[^']*?)+)'/g,
+        (match) => match.replace(/\n\s*/g, ' ')
+      );
+      content = content.replace(
+        /trigger:\s*"([^"]*?(?:\n\s*[^"]*?)+)"/g,
+        (match) => match.replace(/\n\s*/g, ' ')
+      );
+
+      // Fix: Model sometimes uses React.useContext(LenisProvider) instead of useLenis() hook
+      // LenisProvider is a React component, not a Context. The correct way is useLenis()
+      content = content.replace(
+        /React\.useContext\s*\(\s*LenisProvider\s*\)/g,
+        'useLenis()'
+      );
+      content = content.replace(
+        /useContext\s*\(\s*LenisProvider\s*\)/g,
+        'useLenis()'
       );
 
       // Fix 5: ScrollTrigger.kill() does not exist as a static method — the correct API is ScrollTrigger.killAll()
@@ -1685,6 +1865,75 @@ export default ${componentName};
         }
       }
 
+      // Fix: Replace Hero with ProjectHero when project-specific props are passed
+      // Hero only accepts { id?: string }, but pages sometimes pass title/subtitle/imageSrc
+      // which are meant for ProjectHero. Fix the JSX usage.
+      validation.data.content = validation.data.content.replace(
+        /<Hero\s+([^>]*\btitle\s*=\s*\{[^}]+\}[^>]*)\s*>/g,
+        (match, props) => {
+          // Remove title, subtitle, imageSrc props and keep only id if present
+          let cleanProps = props
+            .replace(/\s*title\s*=\s*\{[^}]+\}/g, '')
+            .replace(/\s*subtitle\s*=\s*\{[^}]+\}/g, '')
+            .replace(/\s*imageSrc\s*=\s*\{[^}]+\}/g, '');
+          // If only whitespace remains, remove self-closing space
+          cleanProps = cleanProps.trim();
+          if (cleanProps) {
+            return `<ProjectHero ${cleanProps} />`;
+          }
+          return `<ProjectHero />`;
+        }
+      );
+
+      // Fix: Also catch Hero with subtitle/imageSrc without title
+      validation.data.content = validation.data.content.replace(
+        /<Hero\s+([^>]*\bsubtitle\s*=\s*\{[^}]+\}[^>]*)\s*>/g,
+        (match, props) => {
+          let cleanProps = props
+            .replace(/\s*title\s*=\s*\{[^}]+\}/g, '')
+            .replace(/\s*subtitle\s*=\s*\{[^}]+\}/g, '')
+            .replace(/\s*imageSrc\s*=\s*\{[^}]+\}/g, '');
+          cleanProps = cleanProps.trim();
+          if (cleanProps) {
+            return `<ProjectHero ${cleanProps} />`;
+          }
+          return `<ProjectHero />`;
+        }
+      );
+
+      // Fix: Also catch Hero with imageSrc without title/subtitle
+      validation.data.content = validation.data.content.replace(
+        /<Hero\s+([^>]*\bimageSrc\s*=\s*\{[^}]+\}[^>]*)\s*>/g,
+        (match, props) => {
+          let cleanProps = props
+            .replace(/\s*title\s*=\s*\{[^}]+\}/g, '')
+            .replace(/\s*subtitle\s*=\s*\{[^}]+\}/g, '')
+            .replace(/\s*imageSrc\s*=\s*\{[^}]+\}/g, '');
+          cleanProps = cleanProps.trim();
+          if (cleanProps) {
+            return `<ProjectHero ${cleanProps} />`;
+          }
+          return `<ProjectHero />`;
+        }
+      );
+
+      // Fix: Model sometimes uses CtaSection in JSX but the actual component is Cta
+      // Replace CtaSection JSX usage with Cta
+      validation.data.content = validation.data.content.replace(
+        /<CtaSection\s*(\/)?>/g,
+        (match, selfClosing) => `<Cta${selfClosing ? ' /' : ''}>`
+      );
+      validation.data.content = validation.data.content.replace(
+        /<\/CtaSection>/g,
+        '</Cta>'
+      );
+
+      // Fix: Also fix import if it imported CtaSection
+      validation.data.content = validation.data.content.replace(
+        /import\s+CtaSection\s+from\s+['"]([^'"]+)['"]/,
+        "import Cta from '$1'"
+      );
+
       // Fix invalid className string concatenation (e.g., className='bio + ' ' + styles['skills-container']')
       validation.data.content = validation.data.content.replace(
         /className='([^']+)\s*\+\s*'\s+'\s*\+\s*([^']+)'/g,
@@ -1716,8 +1965,16 @@ export default ${componentName};
         /scrollTrigger\s*:\s*false/g,
         'scrollTrigger: undefined'
       );
-      // Fix missing gsapConfig import when gsapConfig is used
-      if (validation.data.content.includes('gsapConfig.') && !validation.data.content.includes("import { gsapConfig }")) {
+      // Fix missing gsapConfig import when gsapConfig is used.
+      // NOTE: this MUST be a regex check for gsapConfig as a named import, not an exact
+      // substring match. An earlier merge-duplicate-imports pass can combine it with other
+      // names on the same line (e.g. "import { gsapConfig, setupGSAP } from '../lib/gsap-config';"),
+      // which content.includes("import { gsapConfig }") would fail to recognize -- wrongly
+      // concluding gsapConfig isn't imported and re-inserting a duplicate. (Root-caused via
+      // isolated reproduction: the old check reintroduced exactly this duplicate after the
+      // merge fixer had already correctly combined the two imports.)
+      const hasGsapConfigImport = /import\s*\{[^}]*\bgsapConfig\b[^}]*\}\s*from\s*['"](?:\.\.\/)*lib\/gsap-config['"]/.test(validation.data.content);
+      if (validation.data.content.includes('gsapConfig.') && !hasGsapConfigImport) {
         const importLine = "import { gsapConfig } from '../lib/gsap-config';\n";
         if (validation.data.content.includes("import { gsap } from 'gsap';")) {
           validation.data.content = validation.data.content.replace(
@@ -1744,6 +2001,51 @@ export default ${componentName};
         }
       }
 
+      // Merge duplicate gsapConfig imports from same module (AGGRESSIVE - runs before final safety net)
+      // Model often generates: "import { gsapConfig } from '../lib/gsap-config';" AND "import { gsapConfig, setupGSAP } from '../lib/gsap-config';"
+      // Merge into single import with union of named exports
+      if (validation.data.content && fileSpec.path.endsWith('.tsx')) {
+        const gsapConfigImportRegex = /^import\s+\{([^}]+)\}\s+from\s+['"]([^'"]*gsap-config[^'"]*)['"];\s*$/gm;
+        const gsapImports: Array<{ named: string; module: string; full: string }> = [];
+        let gsapMatch: RegExpExecArray | null;
+        while ((gsapMatch = gsapConfigImportRegex.exec(validation.data.content)) !== null) {
+          gsapImports.push({ named: gsapMatch[1]!, module: gsapMatch[2]!, full: gsapMatch[0]! });
+        }
+        if (gsapImports.length > 1) {
+          // Multiple imports from gsap-config modules - merge them
+          const allNamed = new Set<string>();
+          const modulePaths = new Set<string>();
+          for (const imp of gsapImports) {
+            imp.named.split(',').map(s => s.trim()).filter(Boolean).forEach(n => allNamed.add(n));
+            modulePaths.add(imp.module);
+          }
+          // Remove all gsap-config imports
+          let content = validation.data.content;
+          for (const imp of gsapImports) {
+            content = content.replace(imp.full, '');
+          }
+          // Add single merged import per unique module path
+          for (const modulePath of modulePaths) {
+            const merged = `import { ${Array.from(allNamed).sort().join(', ')} } from '${modulePath}';`;
+            // Insert after first import or use client
+            const lines = content.split('\n');
+            let insertIdx = 0;
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i]?.trim().startsWith("'use client'") || lines[i]?.trim().startsWith('"use client"')) {
+                insertIdx = i + 1;
+                break;
+              }
+              if (lines[i]?.startsWith('import ')) {
+                insertIdx = i + 1;
+              }
+            }
+            lines.splice(insertIdx, 0, merged);
+            content = lines.join('\n');
+          }
+          validation.data.content = content;
+        }
+      }
+
       // Fix useLenis called with arguments (it doesn't accept any - just returns context value)
       validation.data.content = validation.data.content.replace(
         /useLenis\(\s*\{[^}]+\}\s*\)/g,
@@ -1754,6 +2056,12 @@ export default ${componentName};
       validation.data.content = validation.data.content.replace(
         /(<div\s+className=\{styles\['[^']+'\]\})\s*\n\s*style=/g,
         '$1 style='
+      );
+      // Fix JSX syntax error: missing closing > on opening tag (generic)
+      // Match tags that are missing the closing > before a newline or end of file
+      validation.data.content = validation.data.content.replace(
+        /(<(?:section|div|header|footer|nav|main|article|aside|ul|ol|li|h[1-6]|p|span|button|a|img|form|input|label|textarea|select|option)\s+[^>]*?)(?=\s*\n\s*(?:[^<\s>]|$))/g,
+        '$1>'
       );
       // Fix JSX syntax error: missing < before div in Context.Provider return
       validation.data.content = validation.data.content.replace(
@@ -1842,16 +2150,161 @@ export default ${componentName};
       validation.data.content = validation.data.content.replace(/\$\{[^}]+\}/g, '');
     }
 
+    // Fix invalid keyframe syntax in CSS module files
+    // Model outputs: .bio from { ... } .bio to { ... } -> should be: from { ... } to { ... }
+    // Also handles multi-class selectors like .features .features from {
+    if (validation.data && validation.data.content && fileSpec.type === 'style' && fileSpec.path.endsWith('.module.css')) {
+      // Match any number of class selectors before from/to
+      validation.data.content = validation.data.content.replace(
+        /(?:\.\w+\s*)+\s+from\s*\{/g,
+        'from {'
+      );
+      validation.data.content = validation.data.content.replace(
+        /(?:\.\w+\s*)+\s+to\s*\{/g,
+        'to {'
+      );
+    }
+
+    // Fix missing closing braces in CSS module files
+    // Model often generates incomplete CSS rules without closing }
+    if (validation.data && validation.data.content && fileSpec.type === 'style' && fileSpec.path.endsWith('.module.css')) {
+      // Count opening and closing braces
+      const openBraces = (validation.data.content.match(/\{/g) || []).length;
+      const closeBraces = (validation.data.content.match(/\}/g) || []).length;
+      if (openBraces > closeBraces) {
+        // Add missing closing braces at the end
+        validation.data.content += '\n'.repeat(openBraces - closeBraces) + '}'.repeat(openBraces - closeBraces);
+      }
+    }
+
+    // Fix missing semicolons in event handler callbacks
+    // Pattern: lenisRef.current.on('scroll', ScrollTrigger.update); -> add missing semicolon
+    if (validation.data && validation.data.content) {
+      validation.data.content = validation.data.content.replace(
+        /(lenisRef\.current\.on\([^)]+\))\s*;?\s*$/gm,
+        '$1;'
+      );
+    }
+
+    // Fix Navbar.tsx: missing navigationItems array definition
+    if (validation.data && validation.data.content && fileSpec.path === 'components/Navbar.tsx') {
+      const c = validation.data.content;
+      if (c.includes('navigationItems.map') && !c.includes('const navigationItems') && !c.includes('navigationItems =')) {
+        // Insert navigationItems array before the return statement
+        const navItems = `  const navigationItems = [
+    { href: '/', label: 'Home' },
+    { href: '/about', label: 'About' },
+    { href: '/work', label: 'Work' },
+    { href: '/contact', label: 'Contact' },
+  ];
+`;
+        // Find the return statement and insert before it
+        const returnIdx = c.lastIndexOf('return (');
+        if (returnIdx !== -1) {
+          // Find the line start
+          const lineStart = c.lastIndexOf('\n', returnIdx) + 1;
+          validation.data.content = c.slice(0, lineStart) + navItems + c.slice(lineStart);
+        }
+      }
+    }
+
+    // Fix bare element selectors in CSS module files (CSS Modules require scoped selectors)
+    // Pattern: bare element selectors like "p {" -> ".component-name p {"
+    if (validation.data && validation.data.content && fileSpec.type === 'style' && fileSpec.path.endsWith('.module.css')) {
+      // Extract component name from file path (e.g., Hero.module.css -> hero)
+      const componentName = fileSpec.path.split('/').pop()?.replace('.module.css', '').toLowerCase() || 'component';
+      const baseClass = `.${componentName}`;
+
+      // Helper: protect @keyframes blocks by replacing them with placeholders
+      // Keyframe selectors (from, to, N%) are never bare HTML elements and must not be scoped
+      const keyframesBlocks: string[] = [];
+      let protectedContent = validation.data.content.replace(
+        /@keyframes\s+[^{]+\{[^}]*\}[\s\S]*?(?=\n[^{]*\{|\n@|$)/g,
+        (block) => {
+          const placeholder = `__KEYFRAMES_BLOCK_${keyframesBlocks.length}__`;
+          keyframesBlocks.push(block);
+          return placeholder;
+        }
+      );
+
+      // Convert bare element selectors to scoped class selectors
+      // Pattern: ^\s*[a-z][a-z0-9]*\s*\{  (bare element selector at start of line)
+      protectedContent = protectedContent.replace(
+        /^\s*([a-z][a-z0-9]*)\s*\{/gm,
+        (match, element) => {
+          // Skip if already has a class/id prefix or is a known CSS at-rule
+          if (match.startsWith('.') || match.startsWith('#') || match.startsWith('@') || match.startsWith(':')) {
+            return match;
+          }
+          // Skip keyframe selectors: from, to, or percentage (e.g., 50%)
+          if (element === 'from' || element === 'to' || /^\d+%$/.test(element)) {
+            return match;
+          }
+          // Convert bare element to scoped class
+          return `${baseClass} ${element} {`;
+        }
+      );
+
+      // Also handle bare element selectors that are indented (not at start of line)
+      protectedContent = protectedContent.replace(
+        /([\s{])([a-z][a-z0-9]*)\s*\{/g,
+        (match, prefix, element) => {
+          // Skip if already has a class/id prefix or is a known CSS at-rule
+          if (match.includes('.') || match.includes('#') || match.includes('@') || match.includes(':')) {
+            return match;
+          }
+          // Skip keyframe selectors: from, to, or percentage
+          if (element === 'from' || element === 'to' || /^\d+%$/.test(element)) {
+            return match;
+          }
+          // Check if this is a property value (like font-family: ...) not a selector
+          // A selector will have the element name followed by { at the end
+          if (match.trim().endsWith('{')) {
+            return `${prefix}.${componentName} ${element} {`;
+          }
+          return match;
+        }
+      );
+
+      // Fix malformed multi-line selectors like "title,\n.hero .hero caption {"
+      // Convert to scoped selectors
+      protectedContent = protectedContent.replace(
+        /^\s*([a-z][a-z0-9]*)\s*,\s*\n\s*([^{]+)\s*\{/gm,
+        (match, el1, rest) => {
+          // Skip keyframe selectors in multi-line form
+          if (el1 === 'from' || el1 === 'to' || /^\d+%$/.test(el1)) {
+            return match;
+          }
+          // Scope both selectors
+          const scoped1 = `.${componentName} ${el1.trim()}`;
+          const scoped2 = rest.trim().split(',').map((s: string) => `.${componentName} ${s.trim()}`).join(', ');
+          return `${scoped1}, ${scoped2} {`;
+        }
+      );
+
+      // Restore @keyframes blocks
+      for (let i = 0; i < keyframesBlocks.length; i++) {
+        const block = keyframesBlocks[i];
+        if (block) {
+          protectedContent = protectedContent.replace(`__KEYFRAMES_BLOCK_${i}__`, block);
+        }
+      }
+
+      validation.data.content = protectedContent;
+    }
+
     // Post-processing: generic missing imports auto-fixer for 7B models
     if (validation.data && validation.data.content && fileSpec.path.startsWith('components/')) {
       const missing = [];
       const c = validation.data.content;
       if (c.includes('useEffect(') && !c.match(/import.*\buseEffect\b/)) missing.push('import { useEffect } from "react";');
-      if (c.includes('useRef(') && !c.match(/import.*\buseRef\b/)) missing.push('import { useRef } from "react";');
+      if ((c.includes('useRef(') || c.includes('useRef<')) && !c.match(/import.*\buseRef\b/)) missing.push('import { useRef } from "react";');
       if (c.includes('useState(') && !c.match(/import.*\buseState\b/)) missing.push('import { useState } from "react";');
       if (c.includes('gsap.') && !c.match(/import.*\bgsap\b/)) missing.push('import gsap from "gsap";');
       if (c.includes('ScrollTrigger') && !c.match(/import.*\bScrollTrigger\b/)) missing.push('import { ScrollTrigger } from "gsap/ScrollTrigger";');
       if (c.includes('styles[') && !c.match(/import styles from/)) missing.push(`import styles from './${fileSpec.path.replace('components/', '').replace('.tsx', '')}.module.css';`);
+      if (c.includes('useReducedMotion(') && !c.match(/import.*\buseReducedMotion\b/)) missing.push(`import useReducedMotion from '${relPathToHooks}/useReducedMotion';`);
+      if (c.includes('gsapConfig') && !c.match(/import.*\bgsapConfig\b/)) missing.push(`import { gsapConfig } from '${relPathToLib}/gsap-config';`);
 
       // Add 'use client' directive if component uses hooks but doesn't have it at the top
       const usesClientFeatures = c.includes('useEffect') || c.includes('useState') || c.includes('useRef') || c.includes('useReducedMotion') || c.includes('useLenis');
@@ -1911,6 +2364,87 @@ export default ${componentName};
       );
     }
 
+    // ── Generic missing useRef declarations auto-fixer ───────────────────────────────────────
+    // Detect any identifier used as `identifier.current` that lacks a `const identifier = useRef(...)`
+    // declaration, and auto-insert one. Handles both single refs and array refs.
+    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
+      const c = validation.data.content;
+      // Find all patterns like `linkRefs.current` or `refName.current`
+      const refUsageRegex = /(\b[a-zA-Z_$][\w$]*)\.current\b/g;
+      const usedRefs = new Set<string>();
+      let match: RegExpExecArray | null;
+      while ((match = refUsageRegex.exec(c)) !== null) {
+        usedRefs.add(match[1]!);
+      }
+      if (usedRefs.size > 0) {
+        const lines = c.split('\n');
+        // Check which used refs have declarations
+        const declaredRefs = new Set<string>();
+        const useRefDeclRegex = /(?:const|let|var)\s+([a-zA-Z_$][\w$]*)\s*=\s*useRef\s*\(/g;
+        let declMatch: RegExpExecArray | null;
+        while ((declMatch = useRefDeclRegex.exec(c)) !== null) {
+          declaredRefs.add(declMatch[1]!);
+        }
+        const missingRefs = [...usedRefs].filter(r => !declaredRefs.has(r));
+        if (missingRefs.length > 0) {
+          // Determine if each missing ref is likely an array ref (used with .push, .includes, .map, .forEach, .filter)
+          // or a single element ref (used with .style, .focus, .scrollIntoView, etc.)
+          const arrayRefMethods = new Set(['push', 'includes', 'map', 'forEach', 'filter', 'find', 'indexOf', 'pop', 'shift', 'unshift', 'splice', 'slice', 'concat']);
+          const singleRefMethods = new Set(['style', 'focus', 'blur', 'scrollIntoView', 'click', 'getBoundingClientRect', 'addEventListener', 'removeEventListener']);
+
+          const refTypeMap = new Map<string, 'array' | 'single'>();
+          for (const refName of missingRefs) {
+            // Check usage patterns around this ref's .current
+            const refUsagePattern = new RegExp(`${refName}\\.current\\.(\\w+)`, 'g');
+            let isArray = false;
+            let isSingle = false;
+            let methodMatch: RegExpExecArray | null;
+            while ((methodMatch = refUsagePattern.exec(c)) !== null) {
+              const method = methodMatch[1]!;
+              if (arrayRefMethods.has(method)) isArray = true;
+              if (singleRefMethods.has(method)) isSingle = true;
+            }
+            // Also check for patterns like `refName.current.push(el)` or `refName.current[i] = el`
+            if (new RegExp(`${refName}\\.current\\[`).test(c)) isArray = true;
+            if (new RegExp(`${refName}\\.current\\s*=\\s*`).test(c)) isSingle = true;
+
+            refTypeMap.set(refName, isArray ? 'array' : (isSingle ? 'single' : 'single'));
+          }
+
+          // Insert missing useRef declarations after the last import or after 'use client'
+          let insertIdx = 0;
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i]?.startsWith('import ')) {
+              insertIdx = i + 1;
+            }
+            if (lines[i]?.trim().startsWith("'use client'") || lines[i]?.trim().startsWith('"use client"')) {
+              insertIdx = i + 1;
+            }
+          }
+
+          const refDeclarations: string[] = [];
+          for (const refName of missingRefs) {
+            const type = refTypeMap.get(refName) ?? 'single';
+            if (type === 'array') {
+              refDeclarations.push(`  const ${refName} = useRef<Array<HTMLElement | null>>([]);`);
+            } else {
+              refDeclarations.push(`  const ${refName} = useRef<HTMLElement | null>(null);`);
+            }
+          }
+
+          // Ensure useRef is imported
+          if (!c.match(/import.*\buseRef\b/)) {
+            refDeclarations.unshift('import { useRef } from "react";');
+          }
+
+          if (refDeclarations.length > 0) {
+            lines.splice(insertIdx, 0, ...refDeclarations);
+            validation.data.content = lines.join('\n');
+          }
+        }
+      }
+    }
+
     // ── FINAL SAFETY NET: unconditional depth-correction, run last, on every file ──────────
     // Whatever happened above, guarantee the import depth is correct before returning.
     // This re-applies the same fix as the earlier "ALL FILES" backstop as a last-word
@@ -1932,6 +2466,79 @@ export default ${componentName};
       );
       if (before !== validation.data.content) {
         console.log(`[codegen] Final depth-correction pass fixed an import path in ${fileSpec.path}`);
+      }
+    }
+
+    // ── FINAL SAFETY NET: unconditional duplicate-named-import merge, run last, on every file ──
+    // Root cause of the gsapConfig duplicate-import build failure: an earlier fixer merged
+    // two gsapConfig imports into one line, but a LATER fixer used a naive exact-substring
+    // check to decide whether gsapConfig was already imported, didn't recognize the merged
+    // form, and re-inserted a duplicate. That specific check is now fixed too (see above),
+    // but the same mistake is easy to reintroduce in any future fixer added to this file.
+    // Rather than relying on every individual fixer never regressing, run one real,
+    // parse-based merge of duplicate named imports per module as the absolute last step
+    // before returning -- this is the same proven pattern the project adopted for the
+    // ScrollTrigger callback bug: don't chase every way a duplicate can be reintroduced,
+    // make it structurally impossible for one to survive to the output.
+    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
+      const finalImportRegex = /^import\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"];\s*$/gm;
+      const finalImportsByModule = new Map<string, Set<string>>();
+      let finalMatch: RegExpExecArray | null;
+      while ((finalMatch = finalImportRegex.exec(validation.data.content)) !== null) {
+        const namedImports = finalMatch[1]!.split(',').map(s => s.trim()).filter(Boolean);
+        const modulePath = finalMatch[2]!;
+        if (!finalImportsByModule.has(modulePath)) {
+          finalImportsByModule.set(modulePath, new Set());
+        }
+        for (const ni of namedImports) {
+          finalImportsByModule.get(modulePath)!.add(ni);
+        }
+      }
+      // Only act on modules that actually have more than one import statement (a real duplicate) --
+      // leave single, already-clean imports completely untouched.
+      const modulesWithDuplicates = new Set<string>();
+      for (const modulePath of finalImportsByModule.keys()) {
+        const escaped = modulePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const occurrences = (validation.data.content.match(
+          new RegExp(`^import\\s+\\{[^}]+\\}\\s+from\\s+['"]${escaped}['"];\\s*$`, 'gm')
+        ) || []).length;
+        if (occurrences > 1) modulesWithDuplicates.add(modulePath);
+      }
+      if (modulesWithDuplicates.size > 0) {
+        let content = validation.data.content;
+        for (const modulePath of modulesWithDuplicates) {
+          const escaped = modulePath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          content = content.replace(
+            new RegExp(`^import\\s+\\{[^}]+\\}\\s+from\\s+['"]${escaped}['"];\\s*\\n?`, 'gm'),
+            ''
+          );
+        }
+        const mergedImports: string[] = [];
+        for (const modulePath of modulesWithDuplicates) {
+          const sortedNamed = Array.from(finalImportsByModule.get(modulePath)!).sort();
+          mergedImports.push(`import { ${sortedNamed.join(', ')} } from '${modulePath}';`);
+        }
+        let insertIdx = 0;
+        const lines = content.split('\n');
+        for (let i = 0; i < lines.length; i++) {
+          if (lines[i]?.trim().startsWith("'use client'") || lines[i]?.trim().startsWith('"use client"')) {
+            insertIdx = i + 1;
+            break;
+          }
+        }
+        if (insertIdx === 0) {
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i]?.trim().startsWith('import ')) {
+              insertIdx = i;
+            } else if (lines[i]?.trim() && insertIdx > 0) {
+              break;
+            }
+          }
+        }
+        lines.splice(insertIdx, 0, ...mergedImports);
+        content = lines.join('\n').replace(/\n{3,}/g, '\n\n');
+        validation.data.content = content;
+        console.log(`[codegen] Final duplicate-import safety net merged repeated import(s) from [${Array.from(modulesWithDuplicates).join(', ')}] in ${fileSpec.path}`);
       }
     }
 
@@ -2262,7 +2869,18 @@ export default ${componentName};
           const diskPath = resolve(this.checkpointDir, file.path);
           if (existsSync(diskPath)) {
             try {
-              const content = readFileSync(diskPath, 'utf-8');
+              let content = readFileSync(diskPath, 'utf-8');
+              // Apply critical post-processing fixes to checkpoint-resumed files too
+              // Fix: hooks/useLenis.ts missing LenisContext import
+              let fixed = false;
+              if (file.path === 'hooks/useLenis.ts') {
+                // Always ensure correct content for useLenis.ts on checkpoint resume
+                if (!content.includes('LenisContext') || !content.includes("from '../lib/lenis-provider'")) {
+                  content = `import { useContext } from 'react';\nimport { LenisContext } from '../lib/lenis-provider';\n\nexport const useLenis = () => {\n  return useContext(LenisContext);\n};\n`;
+                }
+                // Always write back to ensure disk has correct version
+                writeFileSync(diskPath, content, 'utf-8');
+              }
               generatedFiles.set(file.path, content);
               this.emit?.('codegen:file:skipped' as any, `Skipped (checkpoint resume): ${file.path}`);
             } catch {
@@ -2341,6 +2959,46 @@ export default ${componentName};
     autoprefixer: {}
   }
 };`;
+            }
+            // Fix package.json - ensure valid JSON
+            if (fileOutput.path === 'package.json' && fileOutput.content) {
+              try {
+                JSON.parse(fileOutput.content);
+              } catch {
+                // Replace with known-valid package.json
+                fileOutput.content = `{
+  "name": "forge-project",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "15.0.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "gsap": "^3.12.7",
+    "lenis": "^1.1.15"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.7.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "tailwindcss": "^3.4.10",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20",
+    "postcss-preset-env": "^10.1.0",
+    "postcss-import": "^16.1.0",
+    "postcss-nested": "^6.0.0",
+    "eslint": "^9.10.0",
+    "eslint-config-next": "15.0.0"
+  }
+}`;
+              }
             }
             generatedFiles.set(fileOutput.path, fileOutput.content);
             this.fileCallback?.(fileOutput.path, fileOutput.content);

@@ -43,6 +43,9 @@
   "gemini": {
     "defaultModel": "gemini-2.5-flash"
   },
+  "groq": {
+    "defaultModel": "llama-3.3-70b-versatile"
+  },
   "cerebras": {
     "defaultModel": "gpt-oss-120b"
   },

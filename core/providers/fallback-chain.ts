@@ -44,6 +44,10 @@ export class FallbackChain implements ProviderAdapter {
   async complete(params: CompletionParams): Promise<CompletionResult> {
     const errors: Array<{ adapter: string; error: Error }> = [];
 
+    // Don't pass a single model to all adapters — each adapter has its own default model.
+    // Remove model from params so each adapter uses its configured default.
+    const { model: _, ...paramsWithoutModel } = params;
+
     for (const adapter of this.adapters) {
       const startTime = Date.now();
 
@@ -54,7 +58,7 @@ export class FallbackChain implements ProviderAdapter {
       });
 
       try {
-        const result = await adapter.complete(params);
+        const result = await adapter.complete(paramsWithoutModel);
 
         this.emit({
           type: 'success',
@@ -137,6 +141,9 @@ export class FallbackChain implements ProviderAdapter {
     // For streaming, try each adapter in order
     // Unlike complete(), we can't retry mid-stream, so we only try the first
     // available adapter
+    // Don't pass a single model to all adapters — each adapter has its own default model.
+    const { model: _, ...paramsWithoutModel } = params;
+
     for (const adapter of this.adapters) {
       this.emit({
         type: 'attempt',
@@ -145,7 +152,7 @@ export class FallbackChain implements ProviderAdapter {
       });
 
       try {
-        yield* adapter.streamComplete(params);
+        yield* adapter.streamComplete(paramsWithoutModel);
         return;
       } catch (error: any) {
         const err = error instanceof Error ? error : new Error(String(error));
