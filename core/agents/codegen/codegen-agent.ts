@@ -2305,6 +2305,7 @@ export default ${componentName};
       if (c.includes('useEffect(') && !c.match(/import.*\buseEffect\b/)) missing.push('import { useEffect } from "react";');
       if ((c.includes('useRef(') || c.includes('useRef<')) && !c.match(/import.*\buseRef\b/)) missing.push('import { useRef } from "react";');
       if (c.includes('useState(') && !c.match(/import.*\buseState\b/)) missing.push('import { useState } from "react";');
+      if (c.includes('useContext(') && !c.match(/import.*\buseContext\b/)) missing.push('import { useContext } from "react";');
       if (c.includes('gsap.') && !c.match(/import.*\bgsap\b/)) missing.push('import gsap from "gsap";');
       if (c.includes('ScrollTrigger') && !c.match(/import.*\bScrollTrigger\b/)) missing.push('import { ScrollTrigger } from "gsap/ScrollTrigger";');
       if (c.includes('styles[') && !c.match(/import styles from/)) missing.push(`import styles from './${fileSpec.path.replace('components/', '').replace('.tsx', '')}.module.css';`);
