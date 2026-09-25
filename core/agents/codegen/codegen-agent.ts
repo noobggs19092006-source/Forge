@@ -1486,6 +1486,38 @@ export default function ${safeName}() {
         );
       }
 
+      // Fix lenis.on('scroll', ...) missing closing paren: `};` -> `});`
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        let onIndex = content.indexOf("lenis.on('scroll'");
+        if (onIndex === -1) onIndex = content.indexOf('lenis.on("scroll"');
+        if (onIndex !== -1) {
+          const arrowIndex = content.indexOf('=>', onIndex);
+          if (arrowIndex !== -1) {
+            const blockStart = content.indexOf('{', arrowIndex);
+            if (blockStart !== -1) {
+              let braces = 0;
+              let blockEnd = -1;
+              for (let i = blockStart; i < content.length; i++) {
+                if (content[i] === '{') braces++;
+                else if (content[i] === '}') {
+                  braces--;
+                  if (braces === 0) {
+                    blockEnd = i;
+                    break;
+                  }
+                }
+              }
+              if (blockEnd !== -1) {
+                const afterBlock = content.substring(blockEnd + 1, blockEnd + 10);
+                if (afterBlock.match(/^\s*;/)) {
+                  content = content.substring(0, blockEnd + 1) + ')' + content.substring(blockEnd + 1);
+                }
+              }
+            }
+          }
+        }
+      }
+
       // Fix GSAP numeric values with CSS units - they must be strings in object syntax
       // e.g., x: -2rem -> x: '-2rem', y: 100px -> y: '100px'
       if (fileSpec.path.endsWith('.tsx')) {
