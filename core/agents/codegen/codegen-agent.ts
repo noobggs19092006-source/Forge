@@ -1491,20 +1491,33 @@ export default function ${safeName}() {
         let onIndex = content.indexOf("lenis.on('scroll'");
         if (onIndex === -1) onIndex = content.indexOf('lenis.on("scroll"');
         if (onIndex !== -1) {
-          const arrowIndex = content.indexOf('=>', onIndex);
-          if (arrowIndex !== -1) {
-            const blockStart = content.indexOf('{', arrowIndex);
-            if (blockStart !== -1) {
+          let statementEnd = -1;
+          let parens = 0;
+          let foundArrow = -1;
+          for (let i = onIndex; i < content.length; i++) {
+            if (foundArrow === -1 && i - onIndex < 150) {
+              if (content.substring(i, i + 2) === '=>') foundArrow = i;
+            }
+            if (content[i] === '(') parens++;
+            else if (content[i] === ')') {
+              parens--;
+              if (parens === 0) { statementEnd = i; break; }
+            } else if (content[i] === ';' && parens === 0) {
+              statementEnd = i; break;
+            }
+          }
+          if (statementEnd === -1) statementEnd = content.length;
+
+          if (foundArrow !== -1 && foundArrow < statementEnd) {
+            const blockStart = content.indexOf('{', foundArrow);
+            if (blockStart !== -1 && blockStart - foundArrow < 50 && blockStart < statementEnd) {
               let braces = 0;
               let blockEnd = -1;
               for (let i = blockStart; i < content.length; i++) {
                 if (content[i] === '{') braces++;
                 else if (content[i] === '}') {
                   braces--;
-                  if (braces === 0) {
-                    blockEnd = i;
-                    break;
-                  }
+                  if (braces === 0) { blockEnd = i; break; }
                 }
               }
               if (blockEnd !== -1) {
