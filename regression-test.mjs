@@ -217,8 +217,8 @@ async function main() {
   for (const p of availableProviders) {
     modelMap[p.name] = p.model;
   }
-  // Ollama fallback
-  modelMap['ollama'] = 'qwen2.5-coder:7b';
+  // Ollama fallback - use cloud model to avoid GPU memory issues
+  modelMap['ollama'] = 'nemotron-3-ultra:cloud';
   
   const fallbackOrder = availableProviders.map(p => p.name);
   fallbackOrder.push('ollama'); // Ollama always last as guaranteed fallback
@@ -226,7 +226,7 @@ async function main() {
   const codegenFallbackOrder = [...fallbackOrder];
   
   const providerLabels = availableProviders.map(p => p.label).join(' → ');
-  const bannerProvider = providerLabels ? `${providerLabels} → Ollama (fallback)` : 'Ollama (local qwen2.5-coder:7b)';
+  const bannerProvider = providerLabels ? `${providerLabels} → Ollama (fallback)` : 'Ollama (nemotron-3-ultra:cloud)';
   
   console.log('╔═══════════════════════════════════════════════╗');
   console.log('║  FORGE REGRESSION TEST SUITE                  ║');
