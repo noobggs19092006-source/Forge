@@ -87,10 +87,16 @@ export class OllamaAdapter implements ProviderAdapter {
       })),
     ];
 
+    // Use smaller context window for local models to fit in GPU memory
+    // Cloud models use the full context window
+    const isCloudModel = model.includes(':cloud');
+    const numCtx = isCloudModel ? 8192 : 2048;
+    const numPredict = params.maxTokens ?? (isCloudModel ? 4096 : 1024);
+
     // Build options object
     const options: { temperature?: number, num_ctx?: number, num_predict?: number, repeat_penalty?: number } = { 
-      num_ctx: 8192,
-      num_predict: params.maxTokens ?? 4096,
+      num_ctx: numCtx,
+      num_predict: numPredict,
       repeat_penalty: 1.2
     };
     if (params.temperature !== undefined) {
@@ -148,6 +154,7 @@ export class OllamaAdapter implements ProviderAdapter {
   async *streamComplete(params: CompletionParams): AsyncGenerator<string, void, unknown> {
     const model = params.model ?? this.defaultModel;
     const client = this.getClient(model);
+    const isCloudModel = model.includes(':cloud');
 
     const messages = [
       { role: 'system' as const, content: params.systemPrompt },
@@ -157,11 +164,18 @@ export class OllamaAdapter implements ProviderAdapter {
       })),
     ];
 
+    const options = {
+      num_ctx: isCloudModel ? 8192 : 2048,
+      num_predict: params.maxTokens ?? (isCloudModel ? 4096 : 1024),
+      repeat_penalty: 1.2
+    };
+
     try {
       const response = await client.chat({
         model,
         messages,
         stream: true,
+        options,
       });
 
       for await (const chunk of response) {

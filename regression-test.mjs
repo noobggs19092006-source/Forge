@@ -243,11 +243,11 @@ async function main() {
   const useCloud = availableProviders.length > 0;
   const stageTier = useCloud ? 'cloud' : 'local';
   
-  // Per-provider model selection: use that provider's own model ID
+// Per-provider model selection: use that provider's own model ID
   // First available provider in fallback order wins for its tier
   const firstProvider = fallbackOrder[0];
-  const codegenModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'qwen2.5-coder:7b';
-  const otherStageModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'qwen2.5-coder:7b';
+  const codegenModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'nemotron-3-ultra:cloud';
+  const otherStageModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'nemotron-3-ultra:cloud';
   
   config.routing.stages = {
     intake: { tier: stageTier, model: otherStageModel },
@@ -262,7 +262,7 @@ async function main() {
   // Ensure Ollama config exists as final fallback
   if (!config.routing.ollama) config.routing.ollama = {};
   config.routing.ollama.baseUrl = 'http://127.0.0.1:11434';
-  config.routing.ollama.defaultModel = 'qwen2.5-coder:7b';
+  config.routing.ollama.defaultModel = 'nemotron-3-ultra:cloud';
   
   // Codegen concurrency: higher for cloud providers with rate-limit handling
   config.codegenMaxConcurrency = useCloud ? 3 : 1;
