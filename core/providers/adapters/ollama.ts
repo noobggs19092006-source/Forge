@@ -16,25 +16,17 @@ export class OllamaAdapter implements ProviderAdapter {
   readonly tier = 'local' as const;
 
   private client: Ollama;
-  private cloudClient: Ollama | null = null;
   private defaultModel: string;
 
   constructor(
     baseUrl = 'http://localhost:11434',
-    defaultModel = 'llama3.2:3b',
+    defaultModel = 'qwen2.5-coder:7b',
   ) {
     this.client = new Ollama({ host: baseUrl });
     this.defaultModel = defaultModel;
   }
 
   private getClient(model: string): Ollama {
-    // Cloud models (with :cloud suffix) use ollama.com endpoint
-    if (model.includes(':cloud')) {
-      if (!this.cloudClient) {
-        this.cloudClient = new Ollama({ host: 'https://ollama.com' });
-      }
-      return this.cloudClient;
-    }
     return this.client;
   }
 
@@ -87,11 +79,8 @@ export class OllamaAdapter implements ProviderAdapter {
       })),
     ];
 
-    // Use smaller context window for local models to fit in GPU memory
-    // Cloud models use the full context window
-    const isCloudModel = model.includes(':cloud');
-    const numCtx = isCloudModel ? 8192 : 2048;
-    const numPredict = params.maxTokens ?? (isCloudModel ? 4096 : 1024);
+    const numCtx = 8192;
+    const numPredict = params.maxTokens ?? 1024;
 
     // Build options object
     const options: { temperature?: number, num_ctx?: number, num_predict?: number, repeat_penalty?: number } = { 
@@ -154,7 +143,6 @@ export class OllamaAdapter implements ProviderAdapter {
   async *streamComplete(params: CompletionParams): AsyncGenerator<string, void, unknown> {
     const model = params.model ?? this.defaultModel;
     const client = this.getClient(model);
-    const isCloudModel = model.includes(':cloud');
 
     const messages = [
       { role: 'system' as const, content: params.systemPrompt },
@@ -165,8 +153,8 @@ export class OllamaAdapter implements ProviderAdapter {
     ];
 
     const options = {
-      num_ctx: isCloudModel ? 8192 : 2048,
-      num_predict: params.maxTokens ?? (isCloudModel ? 4096 : 1024),
+      num_ctx: 8192,
+      num_predict: params.maxTokens ?? 1024,
       repeat_penalty: 1.2
     };
 
