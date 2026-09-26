@@ -1608,19 +1608,39 @@ export default function ${safeName}() {
         // Fix 2: Also fix any module-scope declaration with HTMLElement type (replace with correct type inside component)
         content = content.replace(/^\s*const\s+heroRef\s*=\s*useRef<HTMLDivElement\s*\|\s*null>\(null\);\s*\n?/gm, '');
         // Fix 3: Ensure heroRef is declared inside component with correct type
-        const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
-        if (componentMatch && componentMatch.index !== undefined) {
-          const componentStart = content.indexOf('{', componentMatch.index);
-          if (componentStart !== -1) {
-            const afterBrace = content.substring(componentStart + 1);
-            const firstContentMatch = afterBrace.match(/^(\s*)/);
-            const indent = firstContentMatch ? firstContentMatch[1] : '  ';
-            // Check if heroRef is already declared inside component with correct type
-            const hasHeroRefInside = content.substring(componentStart).includes('const heroRef = useRef<HTMLDivElement>');
-            if (!hasHeroRefInside) {
-              content = content.substring(0, componentStart + 1) +
-                `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
-                content.substring(componentStart + 1);
+        // Find the function body opening brace (after parameter list, not parameter destructuring)
+        const funcBodyMatch = content.match(/\)\s*\{/);
+        if (funcBodyMatch && funcBodyMatch.index !== undefined) {
+          const bodyStart = funcBodyMatch.index + 1; // position of {
+          const afterBrace = content.substring(bodyStart + 1);
+          const firstContentMatch = afterBrace.match(/^(\s*)/);
+          const indent = firstContentMatch ? firstContentMatch[1] : '  ';
+          // Check if heroRef is already declared inside component with correct type
+          const hasHeroRefInside = content.substring(bodyStart).includes('const heroRef = useRef<HTMLDivElement>');
+          if (!hasHeroRefInside) {
+            content = content.substring(0, bodyStart + 1) +
+              `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
+              content.substring(bodyStart + 1);
+          }
+        } else {
+          // Fallback: find first function/component and use first { after parameter list
+          const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
+          if (componentMatch && componentMatch.index !== undefined) {
+            // Find the ) of the parameter list
+            const paramEnd = content.indexOf(')', componentMatch.index);
+            if (paramEnd !== -1) {
+              const bodyStart = content.indexOf('{', paramEnd);
+              if (bodyStart !== -1) {
+                const afterBrace = content.substring(bodyStart + 1);
+                const firstContentMatch = afterBrace.match(/^(\s*)/);
+                const indent = firstContentMatch ? firstContentMatch[1] : '  ';
+                const hasHeroRefInside = content.substring(bodyStart).includes('const heroRef = useRef<HTMLDivElement>');
+                if (!hasHeroRefInside) {
+                  content = content.substring(0, bodyStart + 1) +
+                    `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
+                    content.substring(bodyStart + 1);
+                }
+              }
             }
           }
         }
