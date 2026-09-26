@@ -1653,11 +1653,11 @@ export default function ${safeName}() {
         // Fix 2: Also fix any module-scope declaration with HTMLElement type (replace with correct type inside component)
         content = content.replace(/^\s*const\s+heroRef\s*=\s*useRef<HTMLDivElement\s*\|\s*null>\(null\);\s*\n?/gm, '');
         // Fix 3: Ensure heroRef is declared inside component with correct type
-        // For arrow function component: const Hero: React.FC<Props> = ({ id }) => {
+        // For arrow function component: const Hero: React.FC<HeroProps> = ({ id }) => {
         // Find the component's function body opening brace (=> { for arrow, or ) { for function)
         let bodyStart = -1;
-        // Try arrow function component pattern first: const Hero: React.FC<Props> = ({ id }) => {
-        const arrowMatch = content.match(/const\s+Hero\s*:\s*React\.FC<Props>\s*=\s*\([^)]*\)\s*=>\s*\{/);
+        // Try arrow function component pattern first: const Hero: React.FC<...> = ({ id }) => {
+        const arrowMatch = content.match(/const\s+Hero\s*:\s*React\.FC<[^>]+>\s*=\s*\([^)]*\)\s*=>\s*\{/);
         if (arrowMatch && arrowMatch.index !== undefined) {
           bodyStart = arrowMatch.index + arrowMatch[0].length - 1; // position of {
         } else {
