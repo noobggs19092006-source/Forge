@@ -16,6 +16,7 @@ export class OllamaAdapter implements ProviderAdapter {
   readonly tier = 'local' as const;
 
   private client: Ollama;
+  private cloudClient: Ollama | null = null;
   private defaultModel: string;
 
   constructor(
@@ -24,6 +25,17 @@ export class OllamaAdapter implements ProviderAdapter {
   ) {
     this.client = new Ollama({ host: baseUrl });
     this.defaultModel = defaultModel;
+  }
+
+  private getClient(model: string): Ollama {
+    // Cloud models (with :cloud suffix) use ollama.com endpoint
+    if (model.includes(':cloud')) {
+      if (!this.cloudClient) {
+        this.cloudClient = new Ollama({ host: 'https://ollama.com' });
+      }
+      return this.cloudClient;
+    }
+    return this.client;
   }
 
   /**
@@ -64,6 +76,8 @@ export class OllamaAdapter implements ProviderAdapter {
       ? params.model 
       : this.defaultModel;
 
+    const client = this.getClient(model);
+
     // Build messages array with system prompt
     const messages = [
       { role: 'system' as const, content: params.systemPrompt },
@@ -94,7 +108,7 @@ export class OllamaAdapter implements ProviderAdapter {
     }
 
     try {
-      const response = await this.client.chat({
+      const response = await client.chat({
         model,
         messages,
         format,
@@ -133,6 +147,7 @@ export class OllamaAdapter implements ProviderAdapter {
 
   async *streamComplete(params: CompletionParams): AsyncGenerator<string, void, unknown> {
     const model = params.model ?? this.defaultModel;
+    const client = this.getClient(model);
 
     const messages = [
       { role: 'system' as const, content: params.systemPrompt },
@@ -143,7 +158,7 @@ export class OllamaAdapter implements ProviderAdapter {
     ];
 
     try {
-      const response = await this.client.chat({
+      const response = await client.chat({
         model,
         messages,
         stream: true,
