@@ -1660,6 +1660,43 @@ export default function ${safeName}() {
         }
       }
 
+      // Fix lenis-provider.tsx: multiple issues
+      // 1. Implicit any type for scroll parameter in handleScroll
+      // 2. Undefined 'len' variable (should be 'lenis')
+      // 3. Missing useReducedMotion import
+      // 4. Incorrect gsapConfig property names
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        // Fix implicit any: ({ scroll }) => ({ scroll: any }) => 
+        content = content.replace(
+          /const\s+handleScroll\s*=\s*\(\{\s*scroll\s*\}\)\s*=>/g,
+          'const handleScroll = ({ scroll }: { scroll: number }) =>'
+        );
+        
+        // Fix undefined 'len' -> 'lenis'
+        content = content.replace(/\blen\?\./g, 'lenis?.');
+        content = content.replace(/\blen\b/g, 'lenis');
+        
+        // Add useReducedMotion import if missing
+        if (!content.includes("useReducedMotion") && content.includes("prefersReducedMotion")) {
+          content = content.replace(
+            /import\s+\{?\s*useEffect[^}]*\}\s*from\s*['"]react['"];/,
+            "import { useEffect, useState } from 'react';\nimport useReducedMotion from '../hooks/useReducedMotion';"
+          );
+        }
+        
+        // Fix gsapConfig property names
+        content = content.replace(/gsapConfig\.defaultEase/g, 'gsapConfig.defaultEasing');
+        content = content.replace(/gsapConfig\.duration/g, 'gsapConfig.defaultDuration');
+        content = content.replace(/lenisInstance\?\.el/g, 'lenisInstance?.rootElement');
+        
+        // Fix useMediaQuery -> useReducedMotion
+        content = content.replace(/const\s+prefersReducedMotion\s*=\s*useMediaQuery\([^)]+\);/g,
+          'const prefersReducedMotion = useReducedMotion();');
+        
+        // Remove gsap.to usage that references len?.el (invalid)
+        content = content.replace(/useEffect\(\(\)\s*=>\s*\{\s*if\s*\(!prefersReducedMotion[^}]*\}\s*,\s*\[[^\]]*\]\s*\);/g, '');
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
