@@ -1578,6 +1578,14 @@ export default function ${safeName}() {
         content = content.replace(/^(\s*)[a-zA-Z_$][\w$]*\s*:\s*(?:string|number|boolean)\s*;/gm, '');
       }
 
+      // Fix duplicate gsapConfig export in lib/gsap-config.ts (export const + export { gsapConfig })
+      if (fileSpec.path === 'lib/gsap-config.ts') {
+        const hasConstExport = /export\s+const\s+gsapConfig\s*=/.test(content);
+        if (hasConstExport) {
+          content = content.replace(/^\s*export\s*\{\s*gsapConfig\s*\}\s*;\s*$/gm, '');
+        }
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");

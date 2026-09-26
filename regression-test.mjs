@@ -204,7 +204,6 @@ async function main() {
   const providerPriority = [
     { key: 'GROQ_API_KEY', name: 'groq', label: 'Groq (llama-3.3-70b-versatile)', model: 'llama-3.3-70b-versatile' },
     { key: 'CEREBRAS_API_KEY', name: 'cerebras', label: 'Cerebras (gpt-oss-120b)', model: 'gpt-oss-120b' },
-    { key: 'OPENROUTER_API_KEY', name: 'openrouter', label: 'OpenRouter (meta-llama/llama-3.3-70b-instruct)', model: 'meta-llama/llama-3.3-70b-instruct:free' },
     { key: 'GEMINI_API_KEY', name: 'gemini', label: 'Gemini (gemini-2.5-flash)', model: 'gemini-2.5-flash' },
     { key: 'NVIDIA_API_KEY', name: 'nvidia-nim', label: 'NVIDIA NIM (nvidia/llama-3.1-nemotron-70b-instruct)', model: 'nvidia/llama-3.1-nemotron-70b-instruct' },
   ];
@@ -222,7 +221,7 @@ async function main() {
   modelMap['ollama'] = 'qwen2.5-coder:7b';
   
   const fallbackOrder = availableProviders.map(p => p.name);
-  // fallbackOrder.push('ollama'); // Ollama always last as guaranteed fallback
+  fallbackOrder.push('ollama'); // Ollama always last as guaranteed fallback
   
   const codegenFallbackOrder = [...fallbackOrder];
   
