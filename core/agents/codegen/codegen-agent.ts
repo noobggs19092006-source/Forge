@@ -1599,6 +1599,29 @@ export default function ${safeName}() {
         }
       }
 
+      // Hero.tsx specific: ensure heroRef is correctly typed as HTMLDivElement and inside component
+      if (fileSpec.path === 'components/Hero.tsx') {
+        // Remove any module-scope heroRef declaration (wrong type or placement)
+        content = content.replace(/^\s*const\s+heroRef\s*=\s*useRef<[^>]+>\(null\);\s*\n?/gm, '');
+        // Ensure heroRef is declared inside component with correct type
+        const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
+        if (componentMatch && componentMatch.index !== undefined) {
+          const componentStart = content.indexOf('{', componentMatch.index);
+          if (componentStart !== -1) {
+            const afterBrace = content.substring(componentStart + 1);
+            const firstContentMatch = afterBrace.match(/^(\s*)/);
+            const indent = firstContentMatch ? firstContentMatch[1] : '  ';
+            // Check if heroRef is already declared inside component
+            const hasHeroRefInside = content.substring(componentStart).includes('const heroRef = useRef<HTMLDivElement>');
+            if (!hasHeroRefInside) {
+              content = content.substring(0, componentStart + 1) +
+                `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
+                content.substring(componentStart + 1);
+            }
+          }
+        }
+      }
+
       // Fix GSAP 2 legacy API: gsap.staggerTo -> gsap.to with stagger property
       // gsap.staggerTo(targets, duration, vars) becomes gsap.to(targets, { ...vars, stagger: ... })
       if (fileSpec.path.endsWith('.tsx')) {
