@@ -2625,7 +2625,8 @@ export default ${componentName};
     // ── Generic missing useRef declarations auto-fixer ───────────────────────────────────────
     // Detect any identifier used as `identifier.current` that lacks a `const identifier = useRef(...)`
     // declaration, and auto-insert one. Handles both single refs and array refs.
-    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
+    // Skip for component files - they have their own component-specific ref handling
+    if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts')) && !fileSpec.path.startsWith('components/')) {
       const c = validation.data.content;
       // Find all patterns like `linkRefs.current` or `refName.current`
       const refUsageRegex = /(\b[a-zA-Z_$][\w$]*)\.current\b/g;
