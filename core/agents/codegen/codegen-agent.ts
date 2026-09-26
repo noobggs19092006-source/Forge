@@ -2381,6 +2381,19 @@ export default ${componentName};
         /return\s*\(\s*<([A-Z][a-zA-Z0-9]*\.Provider[^>]*>)(\s*\n\s*)div\s+/g,
         'return ($1$2<div '
       );
+
+      // Fix unquoted CSS variables in JSX style objects
+      // var(--token) -> 'var(--token)' inside style={{ ... }}
+      validation.data.content = validation.data.content.replace(
+        /style=\{\s*\{([^}]+)\}\s*\}/g,
+        (match, styleContent) => {
+          const fixed = styleContent.replace(
+            /:\s*var\(--[\w-]+\)/g,
+            (m: string) => ": '" + m.slice(1) + "'"
+          );
+          return match.replace(styleContent, fixed);
+        }
+      );
     }
 
     // Fix invalid Lenis options in section components
