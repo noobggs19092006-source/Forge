@@ -3241,6 +3241,39 @@ export default ${componentName};
               fileOutput.content = fileOutput.content.replace(/"next":\s*"15\.0\.0"/g, '"next": "15.5.26"');
               fileOutput.content = fileOutput.content.replace(/"eslint-config-next":\s*"15\.0\.0"/g, '"eslint-config-next": "15.5.26"');
             }
+            // Fix tsconfig.json: ensure valid JSON (especially include array) and moduleResolution
+            if (fileOutput.path === 'tsconfig.json' && fileOutput.content) {
+              try {
+                JSON.parse(fileOutput.content);
+              } catch {
+                // Replace with known-valid tsconfig.json
+                fileOutput.content = `{
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}`;
+              }
+              // Ensure moduleResolution is bundler (not classic) for resolveJsonModule
+              fileOutput.content = fileOutput.content.replace(/"moduleResolution":\s*"classic"/g, '"moduleResolution": "bundler"');
+              // Ensure include array has properly quoted strings
+              fileOutput.content = fileOutput.content.replace(/(\*\/\*\.tsx)"/g, '"$1"');
+            }
             generatedFiles.set(fileOutput.path, fileOutput.content);
             this.fileCallback?.(fileOutput.path, fileOutput.content);
             for (const [pkg, version] of Object.entries(fileOutput.dependencies)) {
