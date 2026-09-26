@@ -1796,6 +1796,10 @@ export default function ${safeName}() {
         (match) => match.replace(/\n\s*/g, ' ')
       );
 
+      // Fix: escaped single quotes in string literals (e.g., \'.hero-subtitle' -> '.hero-subtitle')
+      // This is invalid syntax in regular strings - only valid in template literals
+      content = content.replace(/\\(['"])/g, '$1');
+
       // Fix: Model sometimes uses React.useContext(LenisProvider) instead of useLenis() hook
       // LenisProvider is a React component, not a Context. The correct way is useLenis()
       content = content.replace(
