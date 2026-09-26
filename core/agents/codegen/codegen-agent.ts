@@ -1603,9 +1603,11 @@ export default function ${safeName}() {
 
       // Hero.tsx specific: ensure heroRef is correctly typed as HTMLDivElement and inside component
       if (fileSpec.path === 'components/Hero.tsx') {
-        // Remove any module-scope heroRef declaration (wrong type or placement)
+        // Fix 1: Remove any module-scope heroRef declaration (wrong type or placement)
         content = content.replace(/^\s*const\s+heroRef\s*=\s*useRef<[^>]+>\(null\);\s*\n?/gm, '');
-        // Ensure heroRef is declared inside component with correct type
+        // Fix 2: Also fix any module-scope declaration with HTMLElement type (replace with correct type inside component)
+        content = content.replace(/^\s*const\s+heroRef\s*=\s*useRef<HTMLDivElement\s*\|\s*null>\(null\);\s*\n?/gm, '');
+        // Fix 3: Ensure heroRef is declared inside component with correct type
         const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
         if (componentMatch && componentMatch.index !== undefined) {
           const componentStart = content.indexOf('{', componentMatch.index);
@@ -1613,7 +1615,7 @@ export default function ${safeName}() {
             const afterBrace = content.substring(componentStart + 1);
             const firstContentMatch = afterBrace.match(/^(\s*)/);
             const indent = firstContentMatch ? firstContentMatch[1] : '  ';
-            // Check if heroRef is already declared inside component
+            // Check if heroRef is already declared inside component with correct type
             const hasHeroRefInside = content.substring(componentStart).includes('const heroRef = useRef<HTMLDivElement>');
             if (!hasHeroRefInside) {
               content = content.substring(0, componentStart + 1) +
@@ -1621,6 +1623,19 @@ export default function ${safeName}() {
                 content.substring(componentStart + 1);
             }
           }
+        }
+      }
+
+      // General fix for all components: strip module-scope useRef declarations and ensure refs are inside component
+      if (fileSpec.path.startsWith('components/') && fileSpec.path.endsWith('.tsx')) {
+        // Find all module-scope useRef declarations (before component definition)
+        const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
+        if (componentMatch && componentMatch.index !== undefined) {
+          const beforeComponent = content.substring(0, componentMatch.index);
+          const afterComponent = content.substring(componentMatch.index);
+          // Strip module-scope useRef declarations
+          const cleanedBefore = beforeComponent.replace(/^\s*const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '');
+          content = cleanedBefore + afterComponent;
         }
       }
 
