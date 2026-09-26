@@ -2364,10 +2364,15 @@ export default ${componentName};
         /:\s*['"]var\((--[\w-]+)\)['"]\s*;/g,
         ': var($1);'
       );
-      // Multi-value: property: 'var(--x)' other-value;
+      // Multi-value: property: 'var(--x)' other-value; (quoted var anywhere in value)
       validation.data.content = validation.data.content.replace(
-        /([\.\w-]+\s*:\s*[^;]*)['"]( var\([^'"]+)['"]([\s\w%.,()-]*;)/g,
-        '$1$2$3'
+        /(['"])var\((--[\w-]+)\)\1/g,
+        'var($2)'
+      );
+      // Multi-value: property: 'var(--x)' other-value; (quoted var with space)
+      validation.data.content = validation.data.content.replace(
+        /:\s*['"]var\((--[\w-]+)\)['"](\s+[^;]+);/g,
+        ': var($1)$2;'
       );
     }
 
