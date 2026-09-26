@@ -1546,6 +1546,51 @@ export default function ${safeName}() {
         }
       }
 
+      // Fix ScrollTrigger.create({ onLeaveBack: () => { ... }; }) missing comma/closing paren
+      // The model sometimes writes `onLeaveBack: () => { ... };` instead of `onLeaveBack: () => { ... },`
+      // This uses the same brace-only counting approach as the lenis.on fix.
+      if (fileSpec.path.endsWith('.tsx')) {
+        const stCreateRegex = /ScrollTrigger\.create\(/g;
+        let stMatch: RegExpExecArray | null;
+        while ((stMatch = stCreateRegex.exec(content)) !== null) {
+          const createStart = stMatch.index;
+          const searchWindow = content.substring(createStart, createStart + 300);
+          // Find onLeaveBack in this create call
+          const leaveBackIndex = searchWindow.indexOf('onLeaveBack');
+          if (leaveBackIndex !== -1) {
+            const absLeaveBack = createStart + leaveBackIndex;
+            // Find the arrow function
+            const afterLeaveBack = content.substring(absLeaveBack);
+            const arrowMatch = afterLeaveBack.match(/=>/);
+            if (arrowMatch && arrowMatch.index !== undefined) {
+              const arrowPos = absLeaveBack + arrowMatch.index;
+              const braceMatch = content.substring(arrowPos).match(/{/);
+              if (braceMatch && braceMatch.index !== undefined) {
+                const bracePos = arrowPos + braceMatch.index;
+                let braces = 0;
+                let blockEnd = -1;
+                for (let i = bracePos; i < content.length; i++) {
+                  if (content[i] === '{') braces++;
+                  else if (content[i] === '}') {
+                    braces--;
+                    if (braces === 0) { blockEnd = i; break; }
+                  }
+                }
+                if (blockEnd !== -1) {
+                  const afterBlock = content.substring(blockEnd + 1).match(/^(\s*)([;,)])/);
+                  if (afterBlock && afterBlock[2] === ';') {
+                    // Replace the semicolon with comma
+                    const replaceAt = blockEnd + 1 + (afterBlock[1]?.length || 0);
+                    content = content.substring(0, replaceAt) + ',' + content.substring(replaceAt + 1);
+                  }
+                  // If it's already `},` or `)` leave it
+                }
+              }
+            }
+          }
+        }
+      }
+
       // Fix GSAP numeric values with CSS units - they must be strings in object syntax
       // e.g., x: -2rem -> x: '-2rem', y: 100px -> y: '100px'
       if (fileSpec.path.endsWith('.tsx')) {
