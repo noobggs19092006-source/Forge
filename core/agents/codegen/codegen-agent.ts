@@ -1608,10 +1608,27 @@ export default function ${safeName}() {
         // Fix 2: Also fix any module-scope declaration with HTMLElement type (replace with correct type inside component)
         content = content.replace(/^\s*const\s+heroRef\s*=\s*useRef<HTMLDivElement\s*\|\s*null>\(null\);\s*\n?/gm, '');
         // Fix 3: Ensure heroRef is declared inside component with correct type
-        // Find the function body opening brace (after parameter list, not parameter destructuring)
-        const funcBodyMatch = content.match(/\)\s*\{/);
-        if (funcBodyMatch && funcBodyMatch.index !== undefined) {
-          const bodyStart = funcBodyMatch.index + 1; // position of {
+        // For arrow function component: const Hero: React.FC<Props> = ({ id }) => {
+        // Find the component's function body opening brace (=> { for arrow, or ) { for function)
+        let bodyStart = -1;
+        // Try arrow function component pattern first: const Hero: React.FC<Props> = ({ id }) => {
+        const arrowMatch = content.match(/const\s+Hero\s*:\s*React\.FC<Props>\s*=\s*\([^)]*\)\s*=>\s*\{/);
+        if (arrowMatch && arrowMatch.index !== undefined) {
+          bodyStart = arrowMatch.index + arrowMatch[0].length - 1; // position of {
+        } else {
+          // Try function declaration pattern: function Hero(...) {
+          const funcMatch = content.match(/function\s+Hero\s*\([^)]*\)\s*\{/);
+          if (funcMatch && funcMatch.index !== undefined) {
+            bodyStart = funcMatch.index + funcMatch[0].length - 1;
+          } else {
+            // Try export default function pattern
+            const exportMatch = content.match(/export\s+default\s+function\s+Hero\s*\([^)]*\)\s*\{/);
+            if (exportMatch && exportMatch.index !== undefined) {
+              bodyStart = exportMatch.index + exportMatch[0].length - 1;
+            }
+          }
+        }
+        if (bodyStart !== -1) {
           const afterBrace = content.substring(bodyStart + 1);
           const firstContentMatch = afterBrace.match(/^(\s*)/);
           const indent = firstContentMatch ? firstContentMatch[1] : '  ';
@@ -1621,27 +1638,6 @@ export default function ${safeName}() {
             content = content.substring(0, bodyStart + 1) +
               `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
               content.substring(bodyStart + 1);
-          }
-        } else {
-          // Fallback: find first function/component and use first { after parameter list
-          const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
-          if (componentMatch && componentMatch.index !== undefined) {
-            // Find the ) of the parameter list
-            const paramEnd = content.indexOf(')', componentMatch.index);
-            if (paramEnd !== -1) {
-              const bodyStart = content.indexOf('{', paramEnd);
-              if (bodyStart !== -1) {
-                const afterBrace = content.substring(bodyStart + 1);
-                const firstContentMatch = afterBrace.match(/^(\s*)/);
-                const indent = firstContentMatch ? firstContentMatch[1] : '  ';
-                const hasHeroRefInside = content.substring(bodyStart).includes('const heroRef = useRef<HTMLDivElement>');
-                if (!hasHeroRefInside) {
-                  content = content.substring(0, bodyStart + 1) +
-                    `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
-                    content.substring(bodyStart + 1);
-                }
-              }
-            }
           }
         }
       }
