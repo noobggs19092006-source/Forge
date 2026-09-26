@@ -1484,50 +1484,63 @@ export default function ${safeName}() {
           /window\.addEventListener\(([^)]+),\s*\{[^}]+passive\s*:\s*true\s*\};\s*$/gm,
           (match) => match.replace(/;\s*$/, ');')
         );
+
+        // Fix lenis.el being used instead of lenis.rootElement
+        content = content.replace(/lenis\.el\b/g, 'lenis.rootElement');
+
+        // Fix new Lenis({ ... }; missing closing paren
+        content = content.replace(
+          /new\s+Lenis\s*\(\s*\{[^}]+\}\s*;\s*$/gm,
+          (match) => match.replace(/;\s*$/, ');')
+        );
       }
 
       // Fix lenis.on('scroll', ...) missing closing paren: `};` -> `});`
+      // NOTE: this fixer previously used paren-counting to find where the lenis.on(...)
+      // statement ends -- but that's unreliable BY DEFINITION here, since the bug being
+      // fixed is a missing closing paren. When it's missing, the paren depth never
+      // returns to 0 at the intended spot, so the old loop drifted forward and could
+      // latch onto an unrelated `)` later in the file (e.g. the useEffect's own closing),
+      // corrupting already-correct code. Fixed by using BRACE-only counting (braces stay
+      // reliably balanced even when the call's paren is missing) within a tight, bounded
+      // search window, so this can never drift into unrelated code.
       if (fileSpec.path === 'lib/lenis-provider.tsx') {
         let onIndex = content.indexOf("lenis.on('scroll'");
         if (onIndex === -1) onIndex = content.indexOf('lenis.on("scroll"');
         if (onIndex !== -1) {
-          let statementEnd = -1;
-          let parens = 0;
-          let foundArrow = -1;
-          for (let i = onIndex; i < content.length; i++) {
-            if (foundArrow === -1 && i - onIndex < 150) {
-              if (content.substring(i, i + 2) === '=>') foundArrow = i;
-            }
-            if (content[i] === '(') parens++;
-            else if (content[i] === ')') {
-              parens--;
-              if (parens === 0) { statementEnd = i; break; }
-            } else if (content[i] === ';' && parens === 0) {
-              statementEnd = i; break;
-            }
-          }
-          if (statementEnd === -1) statementEnd = content.length;
-
-          if (foundArrow !== -1 && foundArrow < statementEnd) {
-            const blockStart = content.indexOf('{', foundArrow);
-            if (blockStart !== -1 && blockStart - foundArrow < 50 && blockStart < statementEnd) {
-              let braces = 0;
-              let blockEnd = -1;
-              for (let i = blockStart; i < content.length; i++) {
-                if (content[i] === '{') braces++;
-                else if (content[i] === '}') {
-                  braces--;
-                  if (braces === 0) { blockEnd = i; break; }
+          const searchWindow = content.substring(onIndex, onIndex + 100);
+          const arrowOffset = searchWindow.indexOf('=>');
+          if (arrowOffset !== -1) {
+            const foundArrow = onIndex + arrowOffset;
+            // If the statement already terminated before this arrow, it belongs to
+            // something else entirely -- bail out rather than guess.
+            if (!content.substring(onIndex, foundArrow).includes(';')) {
+              const braceWindow = content.substring(foundArrow, foundArrow + 20);
+              const braceOffset = braceWindow.indexOf('{');
+              if (braceOffset !== -1) {
+                const blockStart = foundArrow + braceOffset;
+                let braces = 0;
+                let blockEnd = -1;
+                for (let i = blockStart; i < content.length; i++) {
+                  if (content[i] === '{') braces++;
+                  else if (content[i] === '}') {
+                    braces--;
+                    if (braces === 0) { blockEnd = i; break; }
+                  }
                 }
-              }
-              if (blockEnd !== -1) {
-                const afterBlock = content.substring(blockEnd + 1, blockEnd + 10);
-                if (afterBlock.match(/^\s*;/)) {
-                  content = content.substring(0, blockEnd + 1) + ')' + content.substring(blockEnd + 1);
+                if (blockEnd !== -1) {
+                  const afterMatch = content.substring(blockEnd + 1).match(/^(\s*)([;)])/);
+                  if (afterMatch && afterMatch[2] === ';') {
+                    const insertAt = blockEnd + 1 + (afterMatch[1]?.length || 0);
+                    content = content.substring(0, insertAt) + ')' + content.substring(insertAt);
+                  }
+                  // If afterMatch[2] === ')', it's already correctly `});` -- leave untouched.
                 }
               }
             }
           }
+          // If no `=>` found in the window, this is a named-function-reference call
+          // (e.g. lenis.on('scroll', ScrollTrigger.update);) -- nothing to fix.
         }
       }
 

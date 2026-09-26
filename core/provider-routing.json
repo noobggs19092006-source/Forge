@@ -1,32 +1,32 @@
 {
   "stages": {
     "intake": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     },
     "architect": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     },
     "design-brain": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     },
     "motion-brain": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     },
     "codegen": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     },
     "qa-gate": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     },
     "critic": {
-      "tier": "local",
-      "model": "qwen2.5-coder:7b"
+      "tier": "cloud",
+      "model": "meta-llama/llama-3.3-70b-instruct:free"
     }
   },
   "fallbackOrder": [
@@ -53,6 +53,6 @@
     "defaultModel": "nvidia/llama-3.1-nemotron-70b-instruct"
   },
   "openrouter": {
-    "defaultModel": "google/gemma-4-31b-it:free"
+    "defaultModel": "meta-llama/llama-3.3-70b-instruct:free"
   }
 }
