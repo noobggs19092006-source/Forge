@@ -1505,9 +1505,11 @@ export default function ${safeName}() {
       // reliably balanced even when the call's paren is missing) within a tight, bounded
       // search window, so this can never drift into unrelated code.
       if (fileSpec.path === 'lib/lenis-provider.tsx') {
-        let onIndex = content.indexOf("lenis.on('scroll'");
-        if (onIndex === -1) onIndex = content.indexOf('lenis.on("scroll"');
-        if (onIndex !== -1) {
+        // Match any variable name followed by .on('scroll' or .on("scroll"
+        const onRegex = /\w+\.on\(['"]scroll['"]/g;
+        let onMatch: RegExpExecArray | null;
+        while ((onMatch = onRegex.exec(content)) !== null) {
+          const onIndex = onMatch.index;
           const searchWindow = content.substring(onIndex, onIndex + 100);
           const arrowOffset = searchWindow.indexOf('=>');
           if (arrowOffset !== -1) {
