@@ -3198,7 +3198,7 @@ export default ${componentName};
   }
 };`;
             }
-            // Fix package.json - ensure valid JSON
+            // Fix package.json - ensure valid JSON and correct Next.js version (15.5.26 includes Windows tsconfig fix #85056)
             if (fileOutput.path === 'package.json' && fileOutput.content) {
               try {
                 JSON.parse(fileOutput.content);
@@ -3215,7 +3215,7 @@ export default ${componentName};
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "15.0.0",
+    "next": "15.5.26",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "gsap": "^3.12.7",
@@ -3233,10 +3233,13 @@ export default ${componentName};
     "postcss-import": "^16.1.0",
     "postcss-nested": "^6.0.0",
     "eslint": "^9.10.0",
-    "eslint-config-next": "15.0.0"
+    "eslint-config-next": "15.5.26"
   }
 }`;
               }
+              // Also fix version in valid JSON
+              fileOutput.content = fileOutput.content.replace(/"next":\s*"15\.0\.0"/g, '"next": "15.5.26"');
+              fileOutput.content = fileOutput.content.replace(/"eslint-config-next":\s*"15\.0\.0"/g, '"eslint-config-next": "15.5.26"');
             }
             generatedFiles.set(fileOutput.path, fileOutput.content);
             this.fileCallback?.(fileOutput.path, fileOutput.content);
