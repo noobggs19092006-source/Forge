@@ -1687,6 +1687,29 @@ export default function ${safeName}() {
         }
       }
 
+      // Fix lib/lenis-provider.tsx: strip module-scope useRef and duplicate lenisRef
+      if (fileSpec.path === 'lib/lenis-provider.tsx') {
+        // Remove module-scope useRef and variable declarations
+        content = content.replace(/^\s*const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '');
+        content = content.replace(/^\s*globalThis\.lenis\s*=\s*null\s*;\s*\n?/gm, '');
+        content = content.replace(/^\s*const\s+lenisRef\s*:\s*\{[^}]+\}\s*=\s*\{[^}]+\}\s*;\s*\n?/gm, '');
+        // Ensure proper imports
+        if (!content.includes('createContext') || !content.includes('useEffect') || !content.includes('useState')) {
+          content = content.replace(
+            /import\s+React\s+from\s+['"]react['"];?\n?/,
+            "import React, { createContext, useContext, useEffect, useState } from 'react';\n"
+          );
+        }
+        if (!content.includes('useRef')) {
+          content = content.replace(
+            /import\s+\{?\s*useRef\s*\}?\s*from\s+['"]react['"];?\n?/,
+            "import { useRef } from 'react';\n"
+          );
+        }
+        // Fix the logic: remove the incorrect conditional lenisRef assignment at module scope
+        content = content.replace(/if\s*\(\s*globalThis\.lenis\s*\)\s*\{[\s\S]*?\}\s*else\s*\{[\s\S]*?\}\s*/gm, '');
+      }
+
       // General fix for all components: strip module-scope useRef declarations and ensure refs are inside component
       if (fileSpec.path.startsWith('components/') && fileSpec.path.endsWith('.tsx')) {
         // Find all module-scope useRef declarations (before component definition)
