@@ -1643,6 +1643,23 @@ export default function ${safeName}() {
         content = content.replace(/^(\s*)\/\/ use client\s*\n/gm, '');
       }
 
+      // Fix Navbar.tsx: navigationItems used before declaration (temporal dead zone)
+      // Move the const navigationItems = [...] before the component
+      if (fileSpec.path === 'components/Navbar.tsx') {
+        const navItemsMatch = content.match(/const\s+navigationItems\s*=\s*\[[\s\S]*?\];/);
+        if (navItemsMatch) {
+          const navItemsDecl = navItemsMatch[0];
+          // Remove from current position
+          content = content.replace(/const\s+navigationItems\s*=\s*\[[\s\S]*?\];\s*/, '');
+          // Find the first import line and insert after all imports
+          const importEndMatch = content.match(/(^import[^;]+;\n)+/m);
+          if (importEndMatch) {
+            const insertPos = importEndMatch.index! + importEndMatch[0].length;
+            content = content.substring(0, insertPos) + '\n' + navItemsDecl + '\n' + content.substring(insertPos);
+          }
+        }
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
