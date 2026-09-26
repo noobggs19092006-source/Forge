@@ -3278,9 +3278,31 @@ export default ${componentName};
   }
 }`;
               }
-              // Also fix version in valid JSON
-              fileOutput.content = fileOutput.content.replace(/"next":\s*"15\.0\.0"/g, '"next": "15.5.26"');
-              fileOutput.content = fileOutput.content.replace(/"eslint-config-next":\s*"15\.0\.0"/g, '"eslint-config-next": "15.5.26"');
+              // Ensure package.json has next in dependencies with correct version
+              try {
+                const pkg = JSON.parse(fileOutput.content);
+                if (!pkg.dependencies) pkg.dependencies = {};
+                if (!pkg.dependencies.next) {
+                  pkg.dependencies.next = "15.5.26";
+                } else if (pkg.dependencies.next === "15.0.0") {
+                  pkg.dependencies.next = "15.5.26";
+                }
+                if (!pkg.devDependencies) pkg.devDependencies = {};
+                if (!pkg.devDependencies["eslint-config-next"]) {
+                  pkg.devDependencies["eslint-config-next"] = "15.5.26";
+                } else if (pkg.devDependencies["eslint-config-next"] === "15.0.0") {
+                  pkg.devDependencies["eslint-config-next"] = "15.5.26";
+                }
+                // Ensure required scripts exist
+                if (!pkg.scripts) pkg.scripts = {};
+                pkg.scripts.dev = "next dev";
+                pkg.scripts.build = "next build";
+                pkg.scripts.start = "next start";
+                pkg.scripts.lint = "next lint";
+                fileOutput.content = JSON.stringify(pkg, null, 2);
+              } catch {
+                // If parsing fails, the catch block above handles it
+              }
             }
             // Fix tsconfig.json: ensure valid JSON (especially include array) and moduleResolution
             if (fileOutput.path === 'tsconfig.json' && fileOutput.content) {
