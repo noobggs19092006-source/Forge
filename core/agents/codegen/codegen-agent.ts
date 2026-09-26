@@ -149,7 +149,7 @@ NON-NEGOTIABLE TECHNICAL REQUIREMENTS (build gates):
 ${formatA11yRulesForPrompt()}
 
 PACKAGE.JSON DEPENDENCY VERSION CONSTRAINTS (MANDATORY - these are tested working combinations):
-- next: "15.0.0" (stable, not RC)
+- next: "15.5.26" (stable, not RC - includes fix for Windows tsconfig duplicate include entries #85056)
 - react: "18.3.1" (stable)
 - react-dom: "18.3.1" (stable)
 - gsap: "^3.12.7"
@@ -162,7 +162,7 @@ PACKAGE.JSON DEPENDENCY VERSION CONSTRAINTS (MANDATORY - these are tested workin
 - postcss-import: "^16.1.0"
 - TypeScript: "^5.6.0"
 - eslint: "^9.10.0"
-- eslint-config-next: "15.0.0"
+- eslint-config-next: "15.5.26"
 - @types/react: "^18.3.0"
 - @types/react-dom: "^18.3.0"
 - @types/node: "^22.7.0"
@@ -477,7 +477,7 @@ SPECIFIC PACKAGE.JSON REQUIREMENTS:
 - postcss-import: "^16.1.0"
 - typescript: "^5.6.0"
 - eslint: "^9.10.0"
-- eslint-config-next: "15.0.0"
+- eslint-config-next: "15.5.26"
 - @types/react: "^18.3.0"
 - @types/react-dom: "^18.3.0"
 - @types/node: "^22.7.0"
@@ -491,7 +491,7 @@ SPECIFIC NEXT.CONFIG.JS REQUIREMENTS:
 - Use standard CommonJS module.exports format (NOT ES modules, NO import/export)
 - Do NOT use TypeScript
 - For monorepo compatibility, set outputFileTracingRoot to the project root
-- Do NOT include turbopack config (Next.js 15.0.0 does not support it)
+- Do NOT include turbopack config (Next.js 15.x does not support it)
 - Output a minimal valid config: module.exports = { outputFileTracingRoot: __dirname }
 - Do NOT use path aliases like @/lib -- this is a CommonJS file, aliases only work in TypeScript/ES modules
 - Do NOT include any import statements
