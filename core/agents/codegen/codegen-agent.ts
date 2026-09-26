@@ -1586,6 +1586,34 @@ export default function ${safeName}() {
         }
       }
 
+      // Strip hallucinated module-scope useRef in section components (Hero, Cta, etc.)
+      // The model sometimes declares useRef constants at module scope before the component
+      if (fileSpec.path.startsWith('components/') && fileSpec.path.endsWith('.tsx')) {
+        const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
+        if (componentMatch && componentMatch.index !== undefined) {
+          const before = content.substring(0, componentMatch.index);
+          const after = content.substring(componentMatch.index);
+          content = before.replace(/^\s*const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '') + after;
+        } else {
+          content = content.replace(/^\s*const\s+\w+Ref\s*=\s*useRef.*?(?:;|\n)/gm, '');
+        }
+      }
+
+      // Fix GSAP 2 legacy API: gsap.staggerTo -> gsap.to with stagger property
+      // gsap.staggerTo(targets, duration, vars) becomes gsap.to(targets, { ...vars, stagger: ... })
+      if (fileSpec.path.endsWith('.tsx')) {
+        content = content.replace(
+          /gsap\.staggerTo\(\s*(\[[^\]]+\])\s*,\s*([^,]+)\s*,\s*\{([^}]+)\}\)/g,
+          (match, targets, duration, vars) => {
+            const staggerMatch = vars.match(/stagger\s*:\s*([^,}]+)/);
+            const staggerValue = staggerMatch ? staggerMatch[1].trim() : '0.08';
+            const varsWithoutStagger = vars.replace(/stagger\s*:\s*[^,}]+,?\s*/, '').trim();
+            const trailingComma = varsWithoutStagger.endsWith(',') ? '' : ',';
+            return `gsap.to(${targets}, { ${varsWithoutStagger}${trailingComma} stagger: ${staggerValue}, duration: ${duration.trim()} })`;
+          }
+        );
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
