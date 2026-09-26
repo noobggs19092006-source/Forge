@@ -1614,6 +1614,35 @@ export default function ${safeName}() {
         );
       }
 
+      // Fix missing heroRef declaration in Hero.tsx (and similar refs in other components)
+      // If a component uses `ref={heroRef}` or passes `heroRef` to gsap.context, ensure it's declared
+      if (fileSpec.path.startsWith('components/') && fileSpec.path.endsWith('.tsx')) {
+        const usesHeroRef = /heroRef/.test(content);
+        if (usesHeroRef) {
+          // Check if heroRef is already declared inside the component
+          const hasHeroRefDecl = /const\s+heroRef\s*=\s*useRef/.test(content);
+          if (!hasHeroRefDecl) {
+            // Find the component function and add the declaration after the opening brace
+            const componentMatch = content.match(/function\s+\w+|const\s+\w+\s*=\s*\(/);
+            if (componentMatch && componentMatch.index !== undefined) {
+              const componentStart = content.indexOf('{', componentMatch.index);
+              if (componentStart !== -1) {
+                // Find the first line after the opening brace that's not empty/whitespace
+                const afterBrace = content.substring(componentStart + 1);
+                const firstContentMatch = afterBrace.match(/^(\s*)/);
+                const indent = firstContentMatch ? firstContentMatch[1] : '  ';
+                // Insert the heroRef declaration at the start of the component body
+                content = content.substring(0, componentStart + 1) +
+                  `\n${indent}const heroRef = useRef<HTMLDivElement>(null);` +
+                  content.substring(componentStart + 1);
+              }
+            }
+          }
+        }
+        // Also remove any stray "// use client" comments that appear after the actual 'use client' directive
+        content = content.replace(/^(\s*)\/\/ use client\s*\n/gm, '');
+      }
+
       // Convert hallucinatory default imports to named imports
       content = content.replace(/import\s+useLenis\s+from\s+['"](?:\.\.\/)+hooks\/useLenis['"];?\n?/g, "import { useLenis } from '../hooks/useLenis';\n");
       content = content.replace(/import\s+ScrollTrigger\s+from\s+['"]gsap\/ScrollTrigger['"];?\n?/g, "import { ScrollTrigger } from 'gsap/ScrollTrigger';\n");
