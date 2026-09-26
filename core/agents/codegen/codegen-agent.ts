@@ -1685,6 +1685,12 @@ export default function ${safeName}() {
         }
       }
 
+      // Fix package.json: ensure Next.js version is 15.5.26 (includes Windows tsconfig fix #85056)
+      if (fileSpec.path === 'package.json') {
+        content = content.replace(/"next":\s*"15\.0\.0"/g, '"next": "15.5.26"');
+        content = content.replace(/"eslint-config-next":\s*"15\.0\.0"/g, '"eslint-config-next": "15.5.26"');
+      }
+
       // Fix lenis-provider.tsx: multiple issues
       // 1. Implicit any type for scroll parameter in handleScroll
       // 2. Undefined 'len' variable (should be 'lenis')
