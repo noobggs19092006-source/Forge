@@ -508,6 +508,7 @@ SPECIFIC APP/LAYOUT.TSX REQUIREMENTS:
 - MUST NOT use 'use client' directive (this is a Server Component)
 - NEVER use styled-jsx (e.g. <style jsx>). It is strictly forbidden in Server Components. If you need global styles, rely on the import of './globals.css'.
 - Wrap children with LenisProvider EXACTLY ONCE (MUST be inside the <body> tag, do NOT wrap the <html> tag with LenisProvider)
+- CRITICAL: Use semantic HTML elements. Wrap the content inside the body in a <main> tag if applicable, and ensure you return <html> and <body> tags.
 - DO NOT import or use gsapConfig in layout.tsx. Only import LenisProvider.
 - Set data-theme="dark" on html element for dark mode
 - Use font-display: optional for Google Fonts (CLS = 0)
@@ -683,6 +684,9 @@ CRITICAL RULES:
 - ALWAYS declare an interface for props (e.g., interface Props { id?: string }) and accept id in component signature
 - Apply the id prop to the root element: <div className={styles.heroContainer} id={id}>
 - CRITICAL: Lenis easing must be a FUNCTION, not a string. Use gsap.parseEase(gsapConfig.defaultEasing) or define a custom easing function. NEVER pass gsapConfig.defaultEasing directly to Lenis — it expects a function, not a string.
+- CRITICAL: You MUST wrap all GSAP animation code inside a check: \`if (!prefersReducedMotion) { ... }\`. Do NOT run animations if the user prefers reduced motion.
+- CRITICAL SYNTAX: In useEffect cleanup functions, NEVER put a comma after the closing brace of the arrow function. WRONG: \`return () => { tl.kill(); },\` CORRECT: \`return () => { tl.kill(); };\`
+- CRITICAL: Replace generic <div> wrappers with semantic HTML elements like <section> or <header>.
 ` : ''}
 
 ${fileSpec.path === 'components/Hero.module.css' ? HERO_MODULE_CSS_REQUIREMENTS : ''}
@@ -749,6 +753,7 @@ SPECIFIC NAVBAR.TSX REQUIREMENTS:
 - DO NOT import gsapConfig — Navbar does not need GSAP animation config
 - Use CSS Modules: import styles from './Navbar.module.css' (DO NOT include CSS in this file)
 - Use className={styles['navbar']}, className={styles['navbar__logo']} etc. — bracket notation for kebab-case
+- CRITICAL: Active links MUST have the attribute \`aria-current="page"\` for accessibility.
 - Export default Navbar component
 ` : ''}
 
@@ -774,6 +779,8 @@ SPECIFIC LENIS-PROVIDER.TSX REQUIREMENTS:
 - Import gsap from 'gsap' (for defaultEase)
 - MUST export LenisContext: export const LenisContext = createContext<Lenis | null>(null);
 - Export LenisProvider component that creates single Lenis instance. Use ONLY valid LenisOptions: { duration: 0.6, orientation: 'vertical', gestureOrientation: 'vertical', smoothWheel: true } (DO NOT use 'direction', it does not exist)
+- CRITICAL: You MUST import useReducedMotion from '../hooks/useReducedMotion' and check \`const prefersReducedMotion = useReducedMotion();\`. If \`prefersReducedMotion\` is true, do NOT initialize Lenis (just render children).
+- CRITICAL: Replace generic <div> wrappers inside the provider with semantic HTML like <main>.
 
 - Render children in a div with height: '100vh', overflowY: 'auto'
 - MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (with single quotes, on its own line)

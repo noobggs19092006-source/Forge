@@ -85,7 +85,7 @@ export function loadConfig(overrides?: Partial<ForgeConfig>): ForgeConfig {
         'critic': { tier: 'cloud', model: 'gemini-2.5-flash' },
       },
       fallbackOrder: ['gemini', 'openrouter', 'ollama'],
-      ollama: { baseUrl: 'http://localhost:11434', defaultModel: 'nemotron-3-ultra:cloud' },
+      ollama: { baseUrl: 'http://localhost:11434', defaultModel: 'qwen2.5-coder:7b' },
       gemini: { defaultModel: 'gemini-2.5-flash' },
       openrouter: { defaultModel: 'google/gemini-2.5-flash' },
     };

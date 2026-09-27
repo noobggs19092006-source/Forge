@@ -13,7 +13,7 @@ export const FluidTypeStepSchema = z.object({
   minSize: z.string().describe('Minimum size in rem (e.g., "0.75rem")'),
   maxSize: z.string().describe('Maximum size in rem (e.g., "1rem")'),
   clampFormula: z.string().describe('Full clamp() formula (e.g., "clamp(0.75rem, 0.65rem + 0.5vw, 1rem)")'),
-  lineHeight: z.number().describe('Line height as unitless ratio (e.g., 1.5)'),
+  lineHeight: z.coerce.number().describe('Line height as unitless ratio (e.g., 1.5)'),
   letterSpacing: z.string().optional().describe('Letter spacing (e.g., "-0.02em")'),
 });
 
@@ -30,7 +30,7 @@ export const TypographySystemSchema = z.object({
   }),
   /** Why these typefaces were chosen — tied to the brief's tone */
   justification: z.string().describe('One-sentence justification for the typographic choice'),
-  typeScale: z.array(FluidTypeStepSchema).min(5).describe('Fluid type scale with clamp() formulas'),
+  typeScale: z.array(FluidTypeStepSchema).min(2).describe('Fluid type scale with clamp() formulas'),
 });
 
 // --- Color ---
@@ -42,7 +42,7 @@ export const ColorTokenSchema = z.object({
 });
 
 export const ColorSystemSchema = z.object({
-  tokens: z.array(ColorTokenSchema).min(4).describe('Color tokens with light/dark values'),
+  tokens: z.array(ColorTokenSchema).min(2).describe('Color tokens with light/dark values'),
   /** How the palette was derived from the brief */
   rationale: z.string().describe('How the palette connects to the brief mood/industry'),
 });
@@ -54,7 +54,7 @@ export const SpacingSystemSchema = z.object({
   scale: z.array(z.object({
     name: z.string().describe('Token name (e.g., "xs", "sm", "md", "lg", "xl", "2xl")'),
     value: z.string().describe('Value in rem or calc (e.g., "0.5rem", "calc(var(--space-base) * 2)")'),
-  })).min(4).describe('Spacing scale'),
+  })).min(2).describe('Spacing scale'),
   gridColumns: z.number().default(12).describe('Grid column count'),
   maxWidth: z.string().default('80rem').describe('Content max width'),
   gutterWidth: z.string().default('1.5rem').describe('Grid gutter width'),
@@ -67,9 +67,9 @@ export const MotionPersonalitySchema = z.object({
     .describe('1-2 sentence personality definition (e.g., "sharp, high-contrast, minimal easing — feels mechanical and confident")'),
   defaultEasing: z.string()
     .describe('Default GSAP/CSS easing (e.g., "power3.out", "cubic-bezier(0.16, 1, 0.3, 1)")'),
-  defaultDuration: z.number()
+  defaultDuration: z.coerce.number()
     .describe('Default animation duration in seconds (e.g., 0.6)'),
-  staggerInterval: z.number()
+  staggerInterval: z.coerce.number()
     .describe('Default stagger interval for grouped animations in seconds (e.g., 0.08)'),
 });
 

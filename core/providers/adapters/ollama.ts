@@ -80,13 +80,13 @@ export class OllamaAdapter implements ProviderAdapter {
     ];
 
     const numCtx = 8192;
-    const numPredict = params.maxTokens ?? 1024;
+    const numPredict = params.maxTokens ?? 4096;
 
     // Build options object
     const options: { temperature?: number, num_ctx?: number, num_predict?: number, repeat_penalty?: number } = { 
       num_ctx: numCtx,
       num_predict: numPredict,
-      repeat_penalty: 1.2
+      repeat_penalty: 1.05
     };
     if (params.temperature !== undefined) {
       options.temperature = params.temperature;
@@ -154,8 +154,8 @@ export class OllamaAdapter implements ProviderAdapter {
 
     const options = {
       num_ctx: 8192,
-      num_predict: params.maxTokens ?? 1024,
-      repeat_penalty: 1.2
+      num_predict: params.maxTokens ?? 4096,
+      repeat_penalty: 1.05
     };
 
     try {

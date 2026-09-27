@@ -93,7 +93,7 @@ export class ForgePipeline {
     }
     const baseUrl: string = this.config.routing.ollama?.baseUrl ?? 'http://localhost:11434';
     const rawDefaultModel = this.config.routing.ollama?.defaultModel;
-    const defaultModel: string = String(rawDefaultModel ?? 'nemotron-3-ultra:cloud');
+    const defaultModel: string = String(rawDefaultModel ?? 'qwen2.5-coder:7b');
     const modelPrefix: string = (defaultModel.split(':')[0] ?? defaultModel);
     
     try {
@@ -128,7 +128,7 @@ export class ForgePipeline {
         `Pre-flight check failed: Ollama is not reachable at ${baseUrl}.\n` +
         `Error: ${err.message}\n` +
         `Please start Ollama with: ollama serve\n` +
-        `Then pull the model: ollama pull nemotron-3-ultra:cloud`
+        `Then pull the model: ollama pull qwen2.5-coder:7b`
       );
     }
   }

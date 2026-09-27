@@ -218,7 +218,7 @@ async function main() {
     modelMap[p.name] = p.model;
   }
   // Ollama fallback - use cloud model to avoid GPU memory issues
-  modelMap['ollama'] = 'nemotron-3-ultra:cloud';
+  modelMap['ollama'] = 'qwen2.5-coder:7b';
   
   const fallbackOrder = availableProviders.map(p => p.name);
   fallbackOrder.push('ollama'); // Ollama always last as guaranteed fallback
@@ -226,7 +226,7 @@ async function main() {
   const codegenFallbackOrder = [...fallbackOrder];
   
   const providerLabels = availableProviders.map(p => p.label).join(' → ');
-  const bannerProvider = providerLabels ? `${providerLabels} → Ollama (fallback)` : 'Ollama (nemotron-3-ultra:cloud)';
+  const bannerProvider = providerLabels ? `${providerLabels} → Ollama (fallback)` : 'Ollama (qwen2.5-coder:7b)';
   
   console.log('╔═══════════════════════════════════════════════╗');
   console.log('║  FORGE REGRESSION TEST SUITE                  ║');
@@ -246,8 +246,8 @@ async function main() {
 // Per-provider model selection: use that provider's own model ID
   // First available provider in fallback order wins for its tier
   const firstProvider = fallbackOrder[0];
-  const codegenModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'nemotron-3-ultra:cloud';
-  const otherStageModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'nemotron-3-ultra:cloud';
+  const codegenModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'qwen2.5-coder:7b';
+  const otherStageModel = useCloud ? (modelMap[firstProvider] ?? 'gemini-2.5-flash') : 'qwen2.5-coder:7b';
   
   config.routing.stages = {
     intake: { tier: stageTier, model: otherStageModel },
@@ -262,7 +262,7 @@ async function main() {
   // Ensure Ollama config exists as final fallback
   if (!config.routing.ollama) config.routing.ollama = {};
   config.routing.ollama.baseUrl = 'http://127.0.0.1:11434';
-  config.routing.ollama.defaultModel = 'nemotron-3-ultra:cloud';
+  config.routing.ollama.defaultModel = 'qwen2.5-coder:7b';
   
   // Codegen concurrency: higher for cloud providers with rate-limit handling
   config.codegenMaxConcurrency = useCloud ? 3 : 1;

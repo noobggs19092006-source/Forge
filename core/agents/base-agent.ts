@@ -97,7 +97,7 @@ export abstract class BaseAgent<TInput, TOutput> {
         systemPrompt: this.systemPrompt,
         messages,
         responseSchema: this.outputSchema,
-        temperature: 0.7,
+        temperature: 0.1,
       });
 
       // Try to parse structured output

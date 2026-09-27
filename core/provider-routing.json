@@ -38,7 +38,7 @@
   "rateLimitDelayMs": 1000,
   "ollama": {
     "baseUrl": "http://localhost:11434",
-    "defaultModel": "nemotron-3-ultra:cloud"
+    "defaultModel": "qwen2.5-coder:7b"
   },
   "gemini": {
     "defaultModel": "gemini-2.5-flash"
