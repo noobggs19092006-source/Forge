@@ -3416,7 +3416,25 @@ export default ${componentName};
             // Fix tsconfig.json: ensure valid JSON (especially include array) and moduleResolution
             if (fileOutput.path === 'tsconfig.json' && fileOutput.content) {
               try {
-                JSON.parse(fileOutput.content);
+                let tsconfig = JSON.parse(fileOutput.content);
+                let modified = false;
+
+                // Fix TS5023: Hallucinated "include" inside compilerOptions
+                if (tsconfig.compilerOptions && tsconfig.compilerOptions.include) {
+                  const badInclude = tsconfig.compilerOptions.include;
+                  delete tsconfig.compilerOptions.include;
+
+                  if (!tsconfig.include) {
+                    tsconfig.include = badInclude;
+                  } else if (Array.isArray(tsconfig.include) && Array.isArray(badInclude)) {
+                    tsconfig.include = Array.from(new Set([...tsconfig.include, ...badInclude]));
+                  }
+                  modified = true;
+                }
+
+                if (modified) {
+                  fileOutput.content = JSON.stringify(tsconfig, null, 2);
+                }
               } catch {
                 // Replace with known-valid tsconfig.json
                 fileOutput.content = `{
