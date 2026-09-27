@@ -825,9 +825,8 @@ export class ForgePipeline {
    * Run `next build` in the generated project directory.
    * Resolves if the build exits 0, rejects otherwise.
    */
-  private runNextBuild(projectDir: string): Promise<void> {
-    return new Promise(async (resolvePromise, reject) => {
-      this.events.emit('stage:start', 'Running next build...', { stage: 'build' as any });
+  private async runNextBuild(projectDir: string): Promise<void> {
+    this.events.emit('stage:start', 'Running next build...', { stage: 'build' as any });
 
       // Copy package-lock.json from monorepo root to generated project for npm compatibility
       const monorepoRoot = resolve(process.cwd(), '..');
@@ -914,7 +913,7 @@ export class ForgePipeline {
       // Don't fail on node_modules check - pnpm may use global store
       // Just verify the project directory exists
       if (!existsSync(projectDir)) {
-        reject(new Error('Project directory not found after install'));
+        throw new Error('Project directory not found after install');
       }
 
 this.events.emit('stage:start', 'Running next build...');
@@ -951,9 +950,10 @@ this.events.emit('stage:start', 'Running next build...');
           reject(new Error(`Failed to spawn next build: ${err.message}`));
         });
       });
-    });
   }
 }
+
+
 
 
 
