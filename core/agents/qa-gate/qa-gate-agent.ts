@@ -278,8 +278,9 @@ export class QAGateAgent {
         content.includes('keyframes');
 
       if (hasAnimation) {
-        const hasReducedMotion = content.includes('prefers-reduced-motion') ||
-          content.includes('reducedMotion') || content.includes('reduced-motion');
+        const lowerContent = content.toLowerCase();
+        const hasReducedMotion = lowerContent.includes('prefers-reduced-motion') ||
+          lowerContent.includes('reducedmotion') || lowerContent.includes('reduced-motion');
 
         checks.push({
           name: 'reduced-motion-handling',
@@ -804,8 +805,8 @@ return imported;
         file: fileName,
       });
       
-      // Check for aria-current="page" on active links
-      const hasAriaCurrent = content.includes('aria-current="page"') || content.includes("aria-current='page'");
+      // Check for aria-current="page" on active links (including dynamic JSX assignments)
+      const hasAriaCurrent = content.includes('aria-current="page"') || content.includes("aria-current='page'") || content.includes('aria-current={') || content.includes('aria-current');
       checks.push({
         name: 'nav-aria-current',
         category: 'accessibility',

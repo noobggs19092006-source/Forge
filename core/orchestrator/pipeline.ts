@@ -918,11 +918,12 @@ export class ForgePipeline {
       }
 
       this.events.emit('stage:start', 'Running next build...');
-      const buildChild = spawn('npx', ['next', 'build'], {
+      const nextBin = resolve(projectDir, 'node_modules', 'next', 'dist', 'bin', 'next');
+      const buildChild = spawn(process.execPath, [nextBin, 'build'], {
         cwd: projectDir,
         stdio: 'pipe',
-        shell: true,
-        env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096' },
+        shell: false,
+        env: { ...process.env, NODE_OPTIONS: '--max-old-space-size=4096', NEXT_TELEMETRY_DISABLED: '1' },
       });
 
       const buildStdout: string[] = [];
@@ -931,8 +932,8 @@ export class ForgePipeline {
       buildChild.stdout?.on('data', (chunk: Buffer) => buildStdout.push(chunk.toString()));
       buildChild.stderr?.on('data', (chunk: Buffer) => buildStderr.push(chunk.toString()));
 
-      await new Promise<void>((resolve, reject) => {
-        buildChild.on('close', (code) => {
+        await new Promise<void>((resolve, reject) => {
+        buildChild.on('exit', (code) => {
           if (code === 0) {
             resolve();
           } else {

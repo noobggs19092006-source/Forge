@@ -454,6 +454,7 @@ Requirements for this specific file:
 - Output complete, runnable code -- no placeholders, no TODOs
   - NEVER append CSS or unrelated file contents to a .tsx file. Output ONLY the code for the requested file.
   - NEVER import framer-motion. The project uses GSAP exclusively for all animations.
+  - CRITICAL SYNTAX: Do NOT put a comma after the closing brace of a return statement! Example of a syntax error: \`return () => { tl.kill(); },\` -> The comma here is INVALID. Remove it.
   - CSS Modules Bracket Notation: You MUST use bracket notation for any class name containing a hyphen (kebab-case). Dot notation is mathematically invalid in TypeScript and will cause build failures.
     - INCORRECT: <div className={styles.hero-section} />
     - CORRECT:   <div className={styles['hero-section']} />
@@ -461,7 +462,7 @@ Requirements for this specific file:
 - EXACT import for LenisProvider: import LenisProvider from '${relPathToLib}/lenis-provider'
 - EXACT import for GSAP config: import { gsapConfig } from '${relPathToLib}/gsap-config'
 - For section components: implement the exact choreography from the motion plan for that section ID
-
+- CRITICAL: 'use client' MUST be a string literal in single quotes. WRONG: use client; CORRECT: 'use client';
 ${fileSpec.path === 'package.json' ? `
 SPECIFIC PACKAGE.JSON REQUIREMENTS:
 - Use EXACT versions from the system prompt's MANDATORY dependency list
@@ -683,10 +684,19 @@ CRITICAL RULES:
 - Export default Hero component at the bottom
 - ALWAYS declare an interface for props (e.g., interface Props { id?: string }) and accept id in component signature
 - Apply the id prop to the root element: <div className={styles.heroContainer} id={id}>
-- CRITICAL: Lenis easing must be a FUNCTION, not a string. Use gsap.parseEase(gsapConfig.defaultEasing) or define a custom easing function. NEVER pass gsapConfig.defaultEasing directly to Lenis — it expects a function, not a string.
-- CRITICAL: You MUST wrap all GSAP animation code inside a check: \`if (!prefersReducedMotion) { ... }\`. Do NOT run animations if the user prefers reduced motion.
-- CRITICAL SYNTAX: In useEffect cleanup functions, NEVER put a comma after the closing brace of the arrow function. WRONG: \`return () => { tl.kill(); },\` CORRECT: \`return () => { tl.kill(); };\`
+- CRITICAL: DO NOT create a 'new Lenis()' instance in this file. Lenis is already provided globally. Use the useLenis hook instead.
+- CRITICAL: Handle prefersReducedMotion by returning early in your useEffect. Use EXACTLY this syntax to avoid trailing comma errors:
+\`\`\`tsx
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    if (!heroRef.current) return;
+    
+    // ... animation code ...
+    return () => { tl.current?.kill(); };
+  }, [prefersReducedMotion]);
+\`\`\`
 - CRITICAL: Replace generic <div> wrappers with semantic HTML elements like <section> or <header>.
+- CRITICAL: When using GSAP with refs and querySelector, DO NOT use optional chaining (e.g. heroRef.current?.querySelector) directly as the tween target because GSAP throws a type error for 'undefined'. Because you added \`if (!heroRef.current) return;\` at the top of the useEffect, you can safely use \`heroRef.current.querySelector\` without optional chaining.
 ` : ''}
 
 ${fileSpec.path === 'components/Hero.module.css' ? HERO_MODULE_CSS_REQUIREMENTS : ''}
@@ -721,6 +731,7 @@ SPECIFIC SECTION COMPONENT REQUIREMENTS (applies to ALL section components in co
 - DO NOT import or use LenisProvider in section components — LenisProvider is ONLY used in app/layout.tsx to wrap the entire app.
 - DO NOT create new Lenis instances in section components — use the shared Lenis instance via useLenis() hook if needed.
 - Section components should focus on their own animation choreography using GSAP/ScrollTrigger.
+- CRITICAL: When using GSAP with refs and querySelector, DO NOT use optional chaining (e.g. sectionRef.current?.querySelector) directly as the tween target because GSAP throws a type error for 'undefined'. Instead, wrap the GSAP code in an if-statement: \`if (!sectionRef.current) return;\` and then use \`sectionRef.current.querySelector\` without optional chaining.
 - Use the shared Lenis instance from context via useLenis() hook (import { useLenis } from '${relPathToHooks}/useLenis').
 - NEVER wrap section content in <LenisProvider> — this causes duplicate Lenis instances and breaks scroll.
 - ScrollTrigger callbacks must use this EXACT template structure — copy verbatim and only change the selector/target and animation properties:
@@ -753,7 +764,7 @@ SPECIFIC NAVBAR.TSX REQUIREMENTS:
 - DO NOT import gsapConfig — Navbar does not need GSAP animation config
 - Use CSS Modules: import styles from './Navbar.module.css' (DO NOT include CSS in this file)
 - Use className={styles['navbar']}, className={styles['navbar__logo']} etc. — bracket notation for kebab-case
-- CRITICAL: Active links MUST have the attribute \`aria-current="page"\` for accessibility.
+- CRITICAL: Active links MUST have the attribute \`aria-current="page"\` for accessibility. Do this in JSX using the pathname: \`aria-current={pathname === '/' ? 'page' : undefined}\`. Do NOT use refs or useEffect to set this.
 - Export default Navbar component
 ` : ''}
 
@@ -781,8 +792,7 @@ SPECIFIC LENIS-PROVIDER.TSX REQUIREMENTS:
 - Export LenisProvider component that creates single Lenis instance. Use ONLY valid LenisOptions: { duration: 0.6, orientation: 'vertical', gestureOrientation: 'vertical', smoothWheel: true } (DO NOT use 'direction', it does not exist)
 - CRITICAL: You MUST import useReducedMotion from '../hooks/useReducedMotion' and check \`const prefersReducedMotion = useReducedMotion();\`. If \`prefersReducedMotion\` is true, do NOT initialize Lenis (just render children).
 - CRITICAL: Replace generic <div> wrappers inside the provider with semantic HTML like <main>.
-
-- Render children in a div with height: '100vh', overflowY: 'auto'
+- Render children inside a <main> tag with height: '100vh', overflowY: 'auto'
 - MUST start with 'use client' as a STRING LITERAL at the very top: 'use client' (with single quotes, on its own line)
 - EXPORT DEFAULT LenisProvider at the end of the file: export default LenisProvider
 - TYPE the component props to accept children: interface LenisProviderProps { children: React.ReactNode } and use function LenisProvider({ children }: LenisProviderProps) instead of React.FC
@@ -1043,6 +1053,10 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       throw new Error(`Single file validation failed for ${fileSpec.path}: ${JSON.stringify(validation.error.format())}`);
     }
 
+    if (validation.data && validation.data.content) {
+      // (Regex hack removed because it matched across nested scopes and broke useEffect)
+    }
+
     // Post-validation fix for next.config.js: strip imports, ensure CommonJS
 
     if (fileSpec.path === 'tailwind.config.ts' && validation.data.content) {
@@ -1118,18 +1132,23 @@ SPECIFIC TSCONFIG.JSON REQUIREMENTS:
       );
     }
 
+    // Hard override for lib/lenis-provider.tsx: 7B model hallucinates state, types, and hooks constantly.
+    if (validation.data && validation.data.content && fileSpec.path === 'lib/lenis-provider.tsx') {
+      validation.data.content = `'use client';\nimport React, { createContext, useEffect, useState } from 'react';\nimport Lenis from 'lenis';\nimport useReducedMotion from '../hooks/useReducedMotion';\nimport { gsapConfig } from './gsap-config';\n\nexport const LenisContext = createContext<Lenis | null>(null);\n\ninterface LenisProviderProps {\n  children: React.ReactNode;\n}\n\nexport default function LenisProvider({ children }: LenisProviderProps) {\n  const [lenis, setLenis] = useState<Lenis | null>(null);\n  const prefersReducedMotion = useReducedMotion();\n\n  useEffect(() => {\n    if (prefersReducedMotion) return;\n\n    const lenisInstance = new Lenis({\n      duration: gsapConfig.defaultDuration,\n      orientation: 'vertical',\n      gestureOrientation: 'vertical',\n      smoothWheel: true,\n    });\n\n    setLenis(lenisInstance);\n\n    return () => {\n      lenisInstance.destroy();\n    };\n  }, [prefersReducedMotion]);\n\n  return (\n    <LenisContext.Provider value={lenis}>\n      <main style={{ height: '100vh', overflowY: 'auto' }}>\n        {children}\n      </main>\n    </LenisContext.Provider>\n  );\n}\n`;
+      return validation.data;
+    }
+
+    // Hard override for lib/gsap-config.ts: 7B model constantly places gsap.matchMedia at root scope instead of in setupGSAP, which crashes SSR during build.
+    if (validation.data && validation.data.content && fileSpec.path === 'lib/gsap-config.ts') {
+      validation.data.content = `import { gsap } from 'gsap';\nimport { ScrollTrigger } from 'gsap/ScrollTrigger';\n\nexport const defaultEasing = 'power3.out';\nexport const defaultDuration = 0.6;\nexport const staggerInterval = 0.08;\n\nexport const gsapConfig = { defaultEasing, defaultDuration, staggerInterval };\n\nexport function setupGSAP() {\n  gsap.registerPlugin(ScrollTrigger);\n  gsap.defaults({ ease: defaultEasing, duration: defaultDuration });\n  gsap.matchMedia().add("(prefers-reduced-motion: reduce)", () => {\n    gsap.ticker.fps(1);\n  });\n}\n`;
+      return validation.data;
+    }
+
     // Hard override for hooks/useLenis.ts: the 7B model consistently ignores the verbatim
     // content instruction and omits the LenisContext import. Enforce it deterministically.
     if (validation.data && validation.data.content && fileSpec.path === 'hooks/useLenis.ts') {
-      if (!validation.data.content.includes('LenisContext') || !validation.data.content.includes("from '../lib/lenis-provider'")) {
-        validation.data.content = `import { useContext } from 'react';\nimport { LenisContext } from '../lib/lenis-provider';\n\nexport const useLenis = () => {\n  return useContext(LenisContext);\n};\n`;
-      } else if (!validation.data.content.includes("from '../lib/lenis-provider'")) {
-        // Fix wrong import path
-        validation.data.content = validation.data.content.replace(
-          /import\s+\{?\s*LenisContext\s*\}?\s+from\s+['"][^'"]+['"]/,
-          "import { LenisContext } from '../lib/lenis-provider'"
-        );
-      }
+      validation.data.content = `import { useContext } from 'react';\nimport { LenisContext } from '../lib/lenis-provider';\n\nexport const useLenis = () => {\n  return useContext(LenisContext);\n};\n`;
+      return validation.data;
     }
 
     if (validation.data && validation.data.content && (fileSpec.path.endsWith('.tsx') || fileSpec.path.endsWith('.ts'))) {
@@ -1814,11 +1833,11 @@ export default function ${safeName}() {
         content = content.replace(/\blen\b/g, 'lenis');
         
         // Add useReducedMotion import if missing
-        if (!content.includes("useReducedMotion") && content.includes("prefersReducedMotion")) {
-          content = content.replace(
-            /import\s+\{?\s*useEffect[^}]*\}\s*from\s*['"]react['"];/,
-            "import { useEffect, useState } from 'react';\nimport useReducedMotion from '../hooks/useReducedMotion';"
-          );
+        if (!content.match(/import\s+useReducedMotion\s+from/) && content.includes("prefersReducedMotion")) {
+          const lines = content.split('\n');
+          const insertIdx = lines.findIndex(l => l.trim().startsWith('import '));
+          lines.splice(insertIdx > -1 ? insertIdx + 1 : 0, 0, "import useReducedMotion from '../hooks/useReducedMotion';");
+          content = lines.join('\n');
         }
         
         // Fix gsapConfig property names
@@ -2903,6 +2922,12 @@ export default ${componentName};
         validation.data.content = content;
         console.log(`[codegen] Final duplicate-import safety net merged repeated import(s) from [${Array.from(modulesWithDuplicates).join(', ')}] in ${fileSpec.path}`);
       }
+    }
+    if (validation.data && validation.data.content) {
+      validation.data.content = validation.data.content
+        .replace(/\},\s*\n\s*\},(\s*\[)/g, '};\n  },$1')
+        .replace(/(\w+Ref\.current)\?\.querySelector/g, '$1!.querySelector')
+        .replace(/<([a-zA-Z0-9]+)\s+([^>]+)>(?=\s*className\s*=)/g, '<$1 $2');
     }
 
     return validation.data;
