@@ -917,7 +917,7 @@ export class ForgePipeline {
         reject(new Error('Project directory not found after install'));
       }
 
-      this.events.emit('stage:start', 'Running next build...');
+this.events.emit('stage:start', 'Running next build...');
       const nextBin = resolve(projectDir, 'node_modules', 'next', 'dist', 'bin', 'next');
       const buildChild = spawn(process.execPath, [nextBin, 'build'], {
         cwd: projectDir,
@@ -932,8 +932,13 @@ export class ForgePipeline {
       buildChild.stdout?.on('data', (chunk: Buffer) => buildStdout.push(chunk.toString()));
       buildChild.stderr?.on('data', (chunk: Buffer) => buildStderr.push(chunk.toString()));
 
-        await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve, reject) => {
         buildChild.on('exit', (code) => {
+          // Immediately destroy stdio streams to prevent child processes (e.g., Next.js telemetry)
+          // from keeping pipes open after the main process exits.
+          buildChild.stdout?.destroy();
+          buildChild.stderr?.destroy();
+          
           if (code === 0) {
             resolve();
           } else {
